@@ -391,6 +391,7 @@ html, body, * {
   padding: 16px !important;
   border-left: 1px solid #f0f0f0;
   border-right: none;
+  border-bottom: none;
 }
 
 .ant-table-cell:first-child {
@@ -409,29 +410,34 @@ html, body, * {
 
 /* Override padding for nesting column cells with higher specificity */
 .ant-table-cell.nesting-cell {
-  padding: 16px 0 16px 16px !important;
+  padding: 0 0 16px 16px !important;
 }
 .ant-table-cell.nesting-cell-child,
 .ant-table-cell.nesting-cell-child * {
   padding: 0 !important;
   margin: 0 !important;
-  border: none !important;
   box-sizing: border-box !important;
 }
+.ant-table-cell.nesting-cell-child {
+  padding-left: 0 !important;
+}
+
+.ant-table-row.nesting-row-child,
+.ant-table-row.nesting-row-child > td,
 .ant-table-cell.nesting-cell-child {
   height: 49px !important;
   min-height: 49px !important;
   max-height: 49px !important;
   line-height: 49px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
   vertical-align: middle !important;
-  background: none !important;
 }
 
-.ant-table-row.nesting-row-child,
-.ant-table-row.nesting-row-parent {
-  height: 49px !important;
-  min-height: 49px !important;
-  max-height: 49px !important;
+.ant-table-row.nesting-row-child > .ant-table-cell.nesting-cell-child {
+  padding-left: 0 !important;
 }
 
 .ant-table-thead > tr > th,
@@ -457,29 +463,16 @@ html, body, * {
   height: 49px;
   background: #F5F5F5;
   border-radius: 2px;
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  margin: 0;
-  padding: 0;
-  box-shadow: none;
   display: block;
-}
-
-.nesting-cell-child-content {
-  display: flex;
-  align-items: center;
-  height: 49px;
-  padding-left: 56px;
-  padding-right: 0;
-  margin: 0;
-  justify-content: flex-start;
+  flex-shrink: 0;
+  position: static;
+  margin-left: 0 !important;
 }
 
 .nesting-cell,
 .nesting-cell-child {
-  padding: 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
 }
 
 table .ant-table-cell.nesting-cell-child {
@@ -507,4 +500,17 @@ table .ant-table-cell.nesting-cell-child {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.ant-table-row.nesting-row-child > .ant-table-cell.nesting-cell-child,
+.nesting-cell-child-content {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+.nesting-rectangle {
+  margin-left: 0 !important;
+}
+
+.ant-table-cell.nesting-cell-child > span {
+  margin-left: 16px !important;
 } 

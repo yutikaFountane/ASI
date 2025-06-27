@@ -407,8 +407,8 @@ const BatchFolio: React.FC = () => {
     setCustomColumns(CUSTOMIZABLE_COLUMNS.map(col => ({ ...col, visible: true })));
   }
   const visibleColumns = [
-    ...MANDATORY_COLUMNS,
-    ...customColumns.filter(col => col.visible),
+    ...MANDATORY_COLUMNS.map(col => ({ ...col, dataIndex: col.key })),
+    ...customColumns.filter(col => col.visible).map(col => ({ ...col, dataIndex: col.key })),
   ];
   console.log('Visible columns:', visibleColumns);
 
@@ -435,6 +435,7 @@ const BatchFolio: React.FC = () => {
     </div>
   );
 
+  // Remove the separate rectangle column logic and revert to a single Reservation ID column
   const columnsWithNesting = visibleColumns.map(col => {
     let width;
     if (col.key === 'reservationId') width = 180;
@@ -447,24 +448,22 @@ const BatchFolio: React.FC = () => {
     else if (col.key === 'balance') width = 140;
     else if (col.key === 'reservationStatus') width = 180;
     else if (col.key === 'cancellationPolicy') width = 180;
+    // Add title and sorter
     return {
-      title: col.label,
-      dataIndex: col.key,
-      key: col.key,
-      align: col.key === 'totalCharges' || col.key === 'balance' ? 'right' as const : undefined,
+      ...col,
       width,
-      sorter: (a: any, b: any) => {
-        if (col.key === 'totalCharges' || col.key === 'balance') {
-          return a[col.key] - b[col.key];
-        }
-        if (col.key === 'checkInDate' || col.key === 'checkOutDate') {
-          return new Date(a[col.key]).getTime() - new Date(b[col.key]).getTime();
-        }
-        if (col.key === 'reservationStatus') {
-          return normalizeStatus(a[col.key]).localeCompare(normalizeStatus(b[col.key]));
-        }
-        return String(a[col.key]).localeCompare(String(b[col.key]));
-      },
+      title: col.label,
+      sorter:
+        col.key === 'reservationId' ? (a: any, b: any) => a.reservationId.localeCompare(b.reservationId) :
+        col.key === 'pocFullName' ? (a: any, b: any) => a.pocFullName.localeCompare(b.pocFullName) :
+        col.key === 'checkInDate' ? (a: any, b: any) => new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime() :
+        col.key === 'checkOutDate' ? (a: any, b: any) => new Date(a.checkOutDate).getTime() - new Date(b.checkOutDate).getTime() :
+        col.key === 'room' ? (a: any, b: any) => a.room.localeCompare(b.room) :
+        col.key === 'businessSource' ? (a: any, b: any) => a.businessSource.localeCompare(b.businessSource) :
+        col.key === 'totalCharges' ? (a: any, b: any) => a.totalCharges - b.totalCharges :
+        col.key === 'balance' ? (a: any, b: any) => a.balance - b.balance :
+        col.key === 'reservationStatus' ? (a: any, b: any) => a.reservationStatus.localeCompare(b.reservationStatus) :
+        undefined,
       render:
         col.key === 'reservationId'
           ? (text: string, record: any) => {
@@ -481,9 +480,9 @@ const BatchFolio: React.FC = () => {
               }
               if (record.isChild) {
                 return (
-                  <div style={{ display: 'flex', alignItems: 'center', height: '49px', width: '100%' }}>
-                    <div style={{ width: 48, height: 49, background: '#F5F5F5', borderRadius: 2, flex: 'none', display: 'block' }} />
-                    <span style={{ marginLeft: 8, lineHeight: '49px', height: 49, display: 'inline-block', verticalAlign: 'middle' }}>{text}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', height: 49 }}>
+                    <div style={{ width: 48, height: 49, background: '#F5F5F5', borderRadius: 2, flexShrink: 0 }} />
+                    <span style={{ display: 'block', height: 49, lineHeight: '49px' }}>{text}</span>
                   </div>
                 );
               }
@@ -496,6 +495,10 @@ const BatchFolio: React.FC = () => {
               : col.key === 'checkInDate' || col.key === 'checkOutDate'
                 ? (value: string) => formatDate(value)
                 : (value: string) => <TruncateTooltipCell value={value} />,
+      onCell:
+        col.key === 'reservationId'
+          ? (record: any) => record.isChild ? { className: 'nesting-cell-child' } : {}
+          : undefined,
     };
   });
 
@@ -621,7 +624,9 @@ const BatchFolio: React.FC = () => {
               title={null}
               open={exportModalOpen}
               onCancel={() => setExportModalOpen(false)}
-              onOk={() => setExportModalOpen(false)}
+              onOk={() => {
+                setExportModalOpen(false);
+              }}
               okText="Yes, Export"
               cancelText="No, Cancel"
               centered
