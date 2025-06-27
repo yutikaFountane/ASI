@@ -1,0 +1,22 @@
+# Sidebar Implementation Context (as of last session)
+
+- Sidebar uses a custom React component with Ant Design and Figma-inspired design.
+- **Header:**
+  - RH icon (32x32px, rounded square) in a fixed container.
+  - "Royal Homes" and subheading are 12px to the right of the icon.
+  - Header and footer have 14px left/right padding in expanded state, 0 in collapsed.
+- **Menu:**
+  - Menu items and icons are sourced from Figma, rendered in a flex column.
+  - In collapsed state, only icons are shown; in expanded, both icons and labels.
+  - Menu item icons use Figma SVG URLs.
+  - Menu item labels are hidden in collapsed state.
+- **Footer:**
+  - Footer logo (32px) in a 32px-wide container, text 12px to the right.
+  - Footer and header structure untouched during menu changes.
+- **CSS:**
+  - All menu, header, and footer spacing, alignment, and hover states match Figma.
+  - No Ant Design Menu code remains; all menu logic is custom.
+- **Other:**
+  - Dates and other content are preserved as per original design.
+
+# End of context 

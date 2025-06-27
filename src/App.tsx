@@ -1,26 +1,41 @@
 import React from 'react';
-import logo from './logo.svg';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import Sidebar from './components/Sidebar';
+import HeaderBar from './components/HeaderBar';
 import './App.css';
+import BatchFolio from './pages/BatchFolio';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+const Home: React.FC = () => (
+  <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <Sidebar />
+    <div style={{ flex: 1, marginLeft: '60px', display: 'flex', flexDirection: 'column' }}>
+      <HeaderBar />
+      <div className="main-content">
+        <div className="content-container">
+          Welcome to ASI Home!
+        </div>
+      </div>
     </div>
-  );
-}
+  </div>
+);
+
+const App: React.FC = () => (
+  <ConfigProvider
+    theme={{
+      token: {
+        colorPrimary: '#3E4BE0',
+      },
+    }}
+  >
+    <Router>
+      <Routes>
+        <Route path="/home" element={<Home />} />
+        <Route path="/batch-folio" element={<BatchFolio />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
+      </Routes>
+    </Router>
+  </ConfigProvider>
+);
 
 export default App;

@@ -1,0 +1,388 @@
+/*
+  Component: Sidebar
+  Author: Gemini
+  Description: A complete recreation of the sidebar styles to ensure correct
+               icon visibility, alignment, and dropdown arrow behavior.
+*/
+
+/* --- 1. Main Sidebar Layout --- */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 256px;
+    background: #2a2f52;
+    font-family: 'Source Sans 3', sans-serif;
+    color: #fff;
+    transition: width 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001;
+    transition: transform 0.3s ease;
+    transform: translateX(-100%);
+  }
+  
+  .sidebar:not(.collapsed) {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    transform: translateX(0);
+    width: 60px !important;
+  }
+  
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+  }
+  
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  /* --- 2. Header, Footer, and Dates --- */
+  .sidebar-header,
+  .sidebar-footer,
+  .sidebar-dates {
+    flex-shrink: 0;
+    background: #2a2f52;
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 14px 14px;
+  }
+  .sidebar-footer {
+    display: flex;
+    align-items: center;
+    padding: 14px 14px;
+  }
+  .sidebar-dates {
+    display: flex;
+    justify-content: space-between;
+  }
+  .sidebar-logo-circle {
+    background: #3e4be0;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px !important;
+    border-radius: 8px;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin: 0 auto;
+    transition: none !important;
+  }
+  
+  .sidebar-logo-circle:hover {
+    transform: scale(1.1);
+  }
+  
+  .sidebar.collapsed .sidebar-logo-circle,
+  .sidebar.collapsed .sidebar-footer-logo {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .sidebar-header-title, .sidebar-footer-title { font-size: 14px; font-weight: 600; line-height: 1.2; color: #fff; }
+  .sidebar-header-meta, .sidebar-footer-meta, .sidebar-date-value { font-size: 12px; color: rgba(255, 255, 255, 0.7); }
+  .sidebar-date-label { font-size: 14px; color: #fff;}
+  .sidebar-header-divider { width: 1px; height: 12px; background: #fff; opacity: 0.5; margin: 0 8px; display: inline-block; }
+  
+  .sidebar-footer-logo {
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
+  
+  .sidebar-footer .sidebar-logo-fixed {
+    width: 32px;
+    min-width: 32px;
+    max-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .sidebar-footer-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 12px !important;
+    flex: none !important;
+    width: auto !important;
+    outline: none;
+  }
+  
+  .sidebar-header-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 12px;
+  }
+  
+  .sidebar.collapsed .sidebar-header-info,
+  .sidebar.collapsed .sidebar-footer-info,
+  .sidebar.collapsed .sidebar-dates {
+    display: none;
+  }
+  
+  .sidebar.collapsed .sidebar-header,
+  .sidebar.collapsed .sidebar-footer {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  .sidebar.collapsed .sidebar-logo-fixed {
+    margin: 0 auto;
+    justify-content: center;
+  }
+  
+  .sidebar {
+    width: 256px;
+    transition: none;
+  }
+  
+  .sidebar.collapsed {
+    width: 60px !important;
+  }
+  
+  /* Remove gap between logo and info in expanded state */
+  .sidebar-header {
+    gap: 0;
+  }
+  
+  .sidebar-bottom-wrapper {
+    margin-top: auto; /* Pushes this section to the bottom */
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: #2a2f52;
+  }
+  
+  .sidebar-dates {
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+.sidebar-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 8px;
+}
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  color: #fff;
+  border: 1px solid transparent;
+}
+.sidebar-menu-item:hover {
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.sidebar-menu-item.selected {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+.sidebar-menu-item.selected .sidebar-menu-label {
+  font-weight: 600;
+}
+.sidebar-menu-icon {
+  font-size: 20px;
+  line-height: 1;
+  width: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sidebar-menu-label {
+  color: #fff;
+  font-size: 14px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 400;
+  white-space: normal;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4; /* Adjust for better readability */
+}
+.sidebar.collapsed .sidebar-menu-label {
+  display: none;
+}
+.sidebar.collapsed .sidebar-menu-item {
+  justify-content: center;
+  padding: 8px 12px;
+}
+
+.sidebar-menu-arrow {
+  font-size: 12px;
+  transition: transform 0.3s;
+}
+
+.sidebar-menu-arrow.open {
+  transform: rotate(180deg);
+}
+
+.sidebar-submenu-container {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.sidebar-submenu-container.open {
+  max-height: 500px; /* Adjust as needed */
+}
+
+.sidebar-submenu {
+  position: relative;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-submenu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 21.5px;
+  width: 1px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.submenu-selected-line {
+  position: absolute;
+  left: 20px;
+  width: 4px;
+  background-color: #4d5efd;
+  border-radius: 2px;
+  transition: top 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+}
+
+.sidebar-submenu-item {
+  padding: 8px 12px;
+  margin: 0 12px;
+  margin-left: 32px; /* Aligns text with parent text */
+  color: #fff;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: normal;
+  border: 1px solid transparent;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4; /* Adjust for better readability */
+}
+
+.sidebar-submenu-item:hover {
+  background-color: rgba(0, 0, 0, 0.45);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-submenu-item.selected {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+}
+
+.sidebar.collapsed .sidebar-menu-label,
+.sidebar.collapsed .sidebar-menu-arrow,
+.sidebar.collapsed .sidebar-submenu-container {
+  display: none;
+}
+.sidebar.collapsed .sidebar-menu-item {
+  justify-content: center;
+  padding: 8px 12px;
+}
+
+/* Collapsed Sidebar Dropdown Styles */
+.sidebar-dropdown-menu {
+  min-width: 180px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 0;
+}
+.sidebar-dropdown-heading {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.65);
+  padding: 12px 12px 5px 12px;
+}
+.sidebar-dropdown-separator {
+  height: 1px;
+  background: #e5e5e5;
+  margin: 0 0 5px 0;
+}
+.sidebar-dropdown-children {
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-dropdown-child {
+  font-size: 14px;
+  padding: 5px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  position: relative;
+  background: transparent;
+  transition: background 0.2s;
+}
+.sidebar-dropdown-child.selected {
+  background: rgba(77,94,253,0.08);
+}
+.sidebar-dropdown-child.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: #4D5EFD;
+  border-radius: 2px;
+}
+.sidebar-dropdown-child:hover {
+  background: rgba(77,94,253,0.04);
+}
+
+.sidebar-dropdown-right .ant-dropdown-menu,
+.sidebar-dropdown-right .sidebar-dropdown-menu {
+  margin-left: 0 !important;
+}

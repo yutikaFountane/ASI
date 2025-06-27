@@ -1,0 +1,510 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
+html, body, * {
+  font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
+}
+
+.batch-folio-heading {
+  font-size: 20px;
+  line-height: 28px;
+  color: rgba(0, 0, 0, 0.88);
+  margin: 0;
+  font-weight: 600;
+}
+
+.batch-folio-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.batch-folio-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.batch-folio-toolbar-btn {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+}
+
+.batch-folio-toolbar-btn .anticon {
+  font-size: 24px !important;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.batch-folio-toolbar .ant-input-wrapper,
+.batch-folio-toolbar .ant-input-affix-wrapper {
+  height: 40px !important;
+  line-height: 40px !important;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.batch-folio-toolbar .ant-input {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.batch-folio-toolbar .ant-input-search-button {
+  background-color: #3E4BE0 !important;
+  border-color: #3E4BE0 !important;
+  border-radius: 0 8px 8px 0 !important;
+  height: 40px !important;
+  min-width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0;
+}
+
+.batch-folio-toolbar .ant-input-search-button,
+.batch-folio-toolbar .ant-input-search-button.ant-btn:hover {
+  background-color: #3E4BE0 !important;
+  border-color: #3E4BE0 !important;
+}
+
+.batch-folio-toolbar .ant-input-search-button.ant-btn:hover {
+  background-color: #3541c8 !important;
+  border-color: #3541c8 !important;
+}
+
+.batch-folio-toolbar .ant-input-search-button .anticon {
+  color: #ffffff !important;
+}
+
+.batch-folio-toolbar .ant-input-affix-wrapper:focus,
+.batch-folio-toolbar .ant-input-affix-wrapper:focus-within,
+.batch-folio-toolbar .ant-input-affix-wrapper-focused,
+.batch-folio-toolbar .ant-input-group-wrapper:focus,
+.batch-folio-toolbar .ant-input-group-wrapper:focus-within,
+.batch-folio-toolbar .ant-input-group-wrapper-focused {
+  border-color: #3E4BE0 !important;
+  box-shadow: 0 0 0 2px rgba(62, 75, 224, 0.2) !important;
+}
+
+.batch-folio-toolbar .ant-input-affix-wrapper {
+  padding-left: 8px !important;
+  padding-right: 0 !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.batch-folio-toolbar .ant-input-clear-icon {
+  position: absolute !important;
+  top: 50% !important;
+  right: 16px !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: auto !important;
+  z-index: 2;
+}
+
+.batch-folio-pagination-bar {
+  margin-top: 12px !important;
+  margin-bottom: 0 !important;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: static;
+}
+
+.pagination-total {
+  flex: 1;
+  text-align: left;
+  font-size: 14px;
+  color: #888;
+}
+
+.batch-folio-pagination-bar .ant-pagination {
+  flex: 1;
+  justify-content: center;
+  display: flex;
+}
+
+.pagination-size-selector {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ant-table-column-title {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.table-header-ellipsis {
+  display: inline-block;
+  flex: 1 1 0%;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  margin-right: 8px;
+}
+
+.ant-table-column-sorters {
+  position: relative;
+}
+
+.ant-table-column-sorter-inner::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: 120%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.ant-table-column-sorters:hover .ant-table-column-sorter-inner::after {
+  opacity: 1;
+}
+
+.ant-table-cell[align='right'] {
+  padding-right: 16px !important;
+}
+
+.ant-table-tbody > tr > td:nth-last-child(2),
+.ant-table-tbody > tr > td:last-child {
+  padding-right: 16px !important;
+}
+
+.ant-table-thead > tr > th {
+  display: table-cell !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+  height: 46px !important;
+  background: #fafafa !important;
+  padding-right: 16px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: none !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 16px !important;
+  border-bottom-width: 1px !important;
+  border-bottom-style: solid !important;
+  border-bottom-color: #f0f0f0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.ant-table-thead > tr > th .ant-table-column-title {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  align-items: unset;
+  justify-content: unset;
+}
+
+.ant-table-thead > tr > th:nth-last-child(2),
+.ant-table-thead > tr > th:last-child {
+  padding-right: 16px !important;
+  border-right: 1px solid #f0f0f0 !important;
+}
+
+.ant-table-thead > tr > th:nth-last-child(2) ~ th {
+  padding-right: 16px !important;
+}
+
+.ant-table-thead > tr > th:nth-last-child(2) .ant-table-column-title,
+.ant-table-thead > tr > th:last-child .ant-table-column-title {
+  padding-right: 0 !important;
+}
+
+.custom-sort-icon {
+  margin-right: 0 !important;
+}
+
+.main-content,
+.content-container,
+.ant-table-wrapper,
+.ant-table {
+  flex: unset;
+  height: unset;
+  min-height: unset;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+.content-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1 1 auto;
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.ant-table-wrapper {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0 !important;
+}
+
+.ant-table {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.ant-table-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.ant-table-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-wrapper {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  margin-bottom: 12px !important;
+}
+
+.ant-table-selection-column,
+.ant-table-thead > tr > th.ant-table-selection-column {
+  width: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
+.ant-table-selection-column .ant-checkbox-wrapper,
+.ant-table-selection-column .ant-checkbox {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.ant-table-selection-column .ant-checkbox-inner {
+  border-radius: 4px !important;
+  width: 20px !important;
+  height: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.ant-table-thead > tr > th.ant-table-selection-column {
+  height: 55px !important;
+  min-height: 55px !important;
+  max-height: 55px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.batch-folio-bottom-actions {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.batch-folio-bottom-actions-group {
+  display: flex;
+  gap: 16px;
+}
+
+.batch-folio-bottom-actions-group .ant-btn {
+  height: 40px !important;
+  min-height: 40px !important;
+  line-height: 24px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.ant-table-thead > tr > th[data-column-key='reservationStatus'] {
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ant-table-cell {
+  text-align: left;
+  vertical-align: middle !important;
+  padding: 16px !important;
+  border-left: 1px solid #f0f0f0;
+  border-right: none;
+}
+
+.ant-table-cell:first-child {
+  border-left: 1px solid #f0f0f0;
+}
+
+.ant-table-cell:last-child {
+  border-right: 1px solid #f0f0f0;
+}
+
+/* Offset only the sort tooltip popup by 16px to the left, without moving the sort icon */
+.ant-table-thead .ant-table-column-sorters .ant-tooltip-open .ant-tooltip-content,
+.ant-table-thead .ant-table-column-sorters .ant-tooltip .ant-tooltip-content {
+  left: -16px !important;
+}
+
+/* Override padding for nesting column cells with higher specificity */
+.ant-table-cell.nesting-cell {
+  padding: 16px 0 16px 16px !important;
+}
+.ant-table-cell.nesting-cell-child,
+.ant-table-cell.nesting-cell-child * {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-sizing: border-box !important;
+}
+.ant-table-cell.nesting-cell-child {
+  height: 49px !important;
+  min-height: 49px !important;
+  max-height: 49px !important;
+  line-height: 49px !important;
+  vertical-align: middle !important;
+  background: none !important;
+}
+
+.ant-table-row.nesting-row-child,
+.ant-table-row.nesting-row-parent {
+  height: 49px !important;
+  min-height: 49px !important;
+  max-height: 49px !important;
+}
+
+.ant-table-thead > tr > th,
+.ant-table-thead > tr > th * {
+  border-right: none !important;
+  box-shadow: none !important;
+}
+.ant-table-thead > tr > th:not(:last-child)::before,
+.ant-table-thead > tr > th:not(:last-child)::after {
+  display: none !important;
+}
+
+.filter-drawer-form .ant-form-item-label > label {
+  font-weight: 600; /* semibold */
+}
+
+.ant-table-container {
+  border-top: 1px solid #e5e6eb;
+}
+
+.nesting-rectangle {
+  width: 48px;
+  height: 49px;
+  background: #F5F5F5;
+  border-radius: 2px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  display: block;
+}
+
+.nesting-cell-child-content {
+  display: flex;
+  align-items: center;
+  height: 49px;
+  padding-left: 56px;
+  padding-right: 0;
+  margin: 0;
+  justify-content: flex-start;
+}
+
+.nesting-cell,
+.nesting-cell-child {
+  padding: 0 !important;
+}
+
+table .ant-table-cell.nesting-cell-child {
+  padding: 0 !important;
+  height: 49px !important;
+  min-height: 49px !important;
+  max-height: 49px !important;
+  line-height: 49px !important;
+}
+
+.export-modal-title {
+  font-weight: 700;
+  font-size: 20px;
+  color: #222;
+}
+
+.export-modal-subheading {
+  font-size: 16px;
+  color: #222;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.export-modal-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+} 
