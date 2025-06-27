@@ -482,7 +482,7 @@ const BatchFolio: React.FC = () => {
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', height: 49 }}>
                     <div style={{ width: 48, height: 49, background: '#F5F5F5', borderRadius: 2, flexShrink: 0 }} />
-                    <span style={{ display: 'block', height: 49, lineHeight: '49px' }}>{text}</span>
+                    <span style={{ display: 'block', height: 49, lineHeight: '49px', marginLeft: 16 }}>{text}</span>
                   </div>
                 );
               }
@@ -544,8 +544,27 @@ const BatchFolio: React.FC = () => {
               </div>
               <div className="batch-folio-toolbar-actions">
                 <Button
-                  icon={<FunnelIcon style={{ width: 24, height: 24 }} />}
+                  icon={
+                    <span style={{ position: 'relative', display: 'inline-block' }}>
+                      <FunnelIcon style={{ width: 24, height: 24, color: isAnyPendingFilterApplied() ? '#3E4BE0' : undefined }} />
+                      {isAnyPendingFilterApplied() && (
+                        <span style={{
+                          position: 'absolute',
+                          top: -3,
+                          right: -3,
+                          width: 14,
+                          height: 14,
+                          background: '#FF3B30',
+                          borderRadius: '50%',
+                          border: '2px solid #fff',
+                          boxSizing: 'border-box',
+                          zIndex: 1,
+                        }} />
+                      )}
+                    </span>
+                  }
                   className="batch-folio-toolbar-btn"
+                  style={isAnyPendingFilterApplied() ? { border: '1px solid #3E4BE0' } : {}}
                   onClick={() => setFilterDrawerOpen(true)}
                 />
                 <Dropdown
@@ -558,6 +577,26 @@ const BatchFolio: React.FC = () => {
                 >
                   <Button icon={<ColumnsIcon style={{ width: 24, height: 24 }} />} className="batch-folio-toolbar-btn" />
                 </Dropdown>
+                <Button
+                  type="primary"
+                  icon={
+                    <ExportIcon
+                      style={{
+                        width: 18,
+                        height: 18,
+                        verticalAlign: 'middle',
+                        display: 'inline-block',
+                        marginTop: '-2px',
+                        color: selectedRowKeys.length === 0 ? 'rgba(0,0,0,0.25)' : '#fff'
+                      }}
+                    />
+                  }
+                  style={{ height: 40, fontSize: 14, lineHeight: '22px', fontWeight: 500 }}
+                  disabled={selectedRowKeys.length === 0}
+                  onClick={() => setExportModalOpen(true)}
+                >
+                  Export
+                </Button>
               </div>
             </div>
             <div className="table-wrapper">
@@ -571,8 +610,8 @@ const BatchFolio: React.FC = () => {
                   onChange: (selectedKeys: React.Key[]) => setSelectedRowKeys(selectedKeys),
                 }}
                 pagination={false}
-                style={{ marginTop: 24, flex: 1, minHeight: 0 }}
-                scroll={{ x: 'max-content', y: 388 }}
+                style={{ marginTop: 24 }}
+                scroll={{ x: 'max-content', y: '60vh' }}
                 childrenColumnName="nonExistentProperty"
                 rowClassName={record => record.isParent ? 'nesting-row-parent' : record.isChild ? 'nesting-row-child' : ''}
               />
@@ -598,66 +637,6 @@ const BatchFolio: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="batch-folio-bottom-actions" style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginTop: 24 }}>
-              <Button
-                type="primary"
-                icon={
-                  <ExportIcon
-                    style={{
-                      width: 18,
-                      height: 18,
-                      verticalAlign: 'middle',
-                      display: 'inline-block',
-                      marginTop: '-2px',
-                      color: selectedRowKeys.length === 0 ? 'rgba(0,0,0,0.25)' : '#fff'
-                    }}
-                  />
-                }
-                style={{ height: 40, fontSize: 14, lineHeight: '22px', fontWeight: 500 }}
-                disabled={selectedRowKeys.length === 0}
-                onClick={() => setExportModalOpen(true)}
-              >
-                Export
-              </Button>
-            </div>
-            <Modal
-              title={null}
-              open={exportModalOpen}
-              onCancel={() => setExportModalOpen(false)}
-              onOk={() => {
-                setExportModalOpen(false);
-              }}
-              okText="Yes, Export"
-              cancelText="No, Cancel"
-              centered
-              width={480}
-              okButtonProps={{ disabled: Object.values(exportOptions).every(v => !v) }}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <InfoIcon style={{ width: 24, height: 24, marginRight: 16, marginTop: 2, flex: 'none' }} />
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{fontWeight:600, fontSize:16, lineHeight:'24px'}}>Export Documents?</div>
-                  <div style={{fontSize:14, lineHeight:'22px', color:'#222', fontWeight:400}}>
-                    Proceeding will export the following documents as selected. The export process may take a few moments depending on the number and size of documents selected.
-                  </div>
-                  <Checkbox.Group
-                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-                    value={Object.keys(exportOptions).filter(k => exportOptions[k])}
-                    onChange={checkedList => {
-                      setExportOptions({
-                        folio: checkedList.includes('folio'),
-                        detailedFolio: checkedList.includes('detailedFolio'),
-                        registrationForm: checkedList.includes('registrationForm'),
-                      });
-                    }}
-                  >
-                    <Checkbox value="folio">Folio</Checkbox>
-                    <Checkbox value="detailedFolio">Detailed Folio</Checkbox>
-                    <Checkbox value="registrationForm">Registration Form</Checkbox>
-                  </Checkbox.Group>
-                </div>
-              </div>
-            </Modal>
             <Drawer
               title={
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
