@@ -207,6 +207,22 @@ const FLOORS = ['Floor 1', 'Floor 2', 'Floor 3'];
 // Helper to get unique room types from data
 const getRoomTypes = (data: any[]) => Array.from(new Set(data.map(d => d.roomType)));
 
+// Helper to extract full room type names from the table data
+const getFullRoomTypes = (data: any[]) => {
+  const fullTypes = new Set<string>();
+  data.forEach(row => {
+    // Room is like '101 (STD)' or 'Multiple (STD)'
+    const match = row.room && row.room.match(/\(([^)]+)\)/);
+    if (match) {
+      const short = match[1];
+      // Find the full name from the short code
+      const full = Object.keys(roomTypeShortMap).find(key => roomTypeShortMap[key] === short);
+      if (full) fullTypes.add(full);
+    }
+  });
+  return Array.from(fullTypes);
+};
+
 // Add this component above BatchFolio
 const statusTagConfig: Record<string, { bg: string; border: string; color: string; icon: React.ReactNode }> = {
   'In-House': {
@@ -426,7 +442,7 @@ const BatchFolio: React.FC = () => {
             onDrop={e => { e.preventDefault(); const from = Number(e.dataTransfer.getData('colIdx')); handleMoveColumn(from, idx); }}
             onDragOver={e => e.preventDefault()}
           >
-            <GripDotsVerticalIcon style={{ color: '#bfbfbf', width: 16, height: 16 }} />
+            <GripDotsVerticalIcon style={{ color: '#bfbfbf', width: 20, height: 20 }} />
             <Checkbox checked={col.visible} onChange={() => handleToggleColumn(col.key)} style={{ marginRight: 8 }} />
             <span style={{ fontSize: 14, color: 'rgba(0,0,0,0.88)', whiteSpace: 'nowrap', flex: 1 }}>{col.label}</span>
           </div>
@@ -521,6 +537,10 @@ const BatchFolio: React.FC = () => {
     );
   };
 
+  // Calculate paginated data for the current page
+  const paginatedRows = filteredDataWithDemo.slice((current - 1) * pageSize, current * pageSize);
+  const isShortPage = paginatedRows.length < pageSize;
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
@@ -595,14 +615,14 @@ const BatchFolio: React.FC = () => {
                   disabled={selectedRowKeys.length === 0}
                   onClick={() => setExportModalOpen(true)}
                 >
-                  Export
+                  Export{selectedRowKeys.length > 0 ? ` (${selectedRowKeys.length})` : ''}
                 </Button>
               </div>
             </div>
             <div className="table-wrapper">
               <Table
                 columns={columnsWithNesting}
-                dataSource={filteredDataWithDemo}
+                dataSource={paginatedRows}
                 rowSelection={{
                   type: 'checkbox',
                   columnWidth: 56,
@@ -611,7 +631,7 @@ const BatchFolio: React.FC = () => {
                 }}
                 pagination={false}
                 style={{ marginTop: 24 }}
-                scroll={{ x: 'max-content', y: '60vh' }}
+                {...(isShortPage ? {} : { scroll: { x: 'max-content', y: 445 } })}
                 childrenColumnName="nonExistentProperty"
                 rowClassName={record => record.isParent ? 'nesting-row-parent' : record.isChild ? 'nesting-row-child' : ''}
               />
@@ -631,7 +651,10 @@ const BatchFolio: React.FC = () => {
               <div className="pagination-size-selector">
                 <Select
                   value={pageSize}
-                  onChange={size => handlePageChange(1, size)}
+                  onChange={size => {
+                    setPageSize(size);
+                    setCurrent(1);
+                  }}
                   options={pageSizeOptions.map(size => ({ value: size, label: `${size} / page` }))}
                   style={{ width: 100 }}
                 />
@@ -720,7 +743,7 @@ const BatchFolio: React.FC = () => {
                     mode="multiple"
                     value={pendingFilters.roomTypes}
                     onChange={val => setPendingFilters(f => ({ ...f, roomTypes: val }))}
-                    options={getRoomTypes(finalData).map(rt => ({ value: rt, label: rt }))}
+                    options={getFullRoomTypes(finalData).map(rt => ({ value: rt, label: rt }))}
                     style={{ width: '100%' }}
                   />
                 </Form.Item>
@@ -729,6 +752,45 @@ const BatchFolio: React.FC = () => {
           </div>
         </div>
       </div>
+      <Modal
+        title={null}
+        open={exportModalOpen}
+        onCancel={() => setExportModalOpen(false)}
+        onOk={() => setExportModalOpen(false)}
+        okText="Yes, Export"
+        cancelText="No, Cancel"
+        centered
+        okButtonProps={{
+          disabled: !exportOptions.folio && !exportOptions.detailedFolio && !exportOptions.registrationForm
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0 }}>
+            <InfoIcon style={{ width: 24, height: 24, color: '#3E4BE0' }} />
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#222' }}>Export documents?</span>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 400, color: '#222', textAlign: 'left', marginBottom: 8, paddingLeft: 32 }}>
+            Proceeding will export the following documents as selected. The export process may take a few moments depending on the number and size of documents selected.
+          </div>
+          <div className="export-modal-checkbox-group" style={{ paddingTop: 0, paddingBottom: 0, paddingLeft: 32 }}>
+            <Checkbox
+              checked={exportOptions.folio}
+              onChange={e => setExportOptions(opts => ({ ...opts, folio: e.target.checked }))}
+              style={{ fontSize: 14 }}
+            >Folio</Checkbox>
+            <Checkbox
+              checked={exportOptions.detailedFolio}
+              onChange={e => setExportOptions(opts => ({ ...opts, detailedFolio: e.target.checked }))}
+              style={{ fontSize: 14 }}
+            >Detailed Folio</Checkbox>
+            <Checkbox
+              checked={exportOptions.registrationForm}
+              onChange={e => setExportOptions(opts => ({ ...opts, registrationForm: e.target.checked }))}
+              style={{ fontSize: 14 }}
+            >Registration Form</Checkbox>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

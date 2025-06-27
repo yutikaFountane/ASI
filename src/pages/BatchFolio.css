@@ -306,7 +306,7 @@ html, body, * {
   flex-direction: column;
   min-height: 0;
   width: 100%;
-  margin-bottom: 12px !important; /* 12px gap above pagination */
+  margin-bottom: 32px !important; /* Increased space below table */
   overflow: hidden;
 }
 
@@ -407,7 +407,6 @@ html, body, * {
 .ant-table-cell.nesting-cell-child,
 .ant-table-cell.nesting-cell-child * {
   padding: 0 !important;
-  margin: 0 !important;
   box-sizing: border-box !important;
 }
 .ant-table-cell.nesting-cell-child {
@@ -515,4 +514,11 @@ table .ant-table-cell.nesting-cell-child {
 
 .ant-table-body {
   overflow-y: auto;
+}
+
+.filter-drawer-form .ant-select-selector {
+  height: 40px !important;
+  min-height: 40px !important;
+  display: flex;
+  align-items: center;
 } 
