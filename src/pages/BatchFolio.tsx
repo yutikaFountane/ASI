@@ -630,9 +630,13 @@ const BatchFolio: React.FC = () => {
                   onChange: (selectedKeys: React.Key[]) => setSelectedRowKeys(selectedKeys),
                 }}
                 pagination={false}
-                style={{ marginTop: 24 }}
-                {...(isShortPage ? {} : { scroll: { x: 'max-content', y: 445 } })}
-                childrenColumnName="nonExistentProperty"
+                style={{
+                    marginTop: 24,
+                    overflowY: 'auto',
+                    maxHeight: 'calc(100vh - 400px)',
+                  }}
+                // {...(isShortPage ? {} : { scroll: { x: 'max-content', y: 445 } })}
+                // childrenColumnName="nonExistentProperty"
                 rowClassName={record => record.isParent ? 'nesting-row-parent' : record.isChild ? 'nesting-row-child' : ''}
               />
             </div>
