@@ -486,11 +486,10 @@ const BatchFolio: React.FC = () => {
               if (record.isParent) {
                 return (
                   <div className="nesting-cell" style={{ display: 'flex', alignItems: 'center' }}>
-                    <GroupIcon style={{ color: '#BFBFBF', marginRight: '16px' }} />
-                    <div>
-                      <span>{text}</span>
-                      <div style={{ fontSize: '12px', color: '#555' }}>{record.pocFullName}</div>
-                    </div>
+                    <Tooltip title={record.pocFullName} placement="top">
+                      <span><GroupIcon style={{ color: '#BFBFBF', marginRight: '16px' }} /></span>
+                    </Tooltip>
+                    <span>{text}</span>
                   </div>
                 );
               }
@@ -623,6 +622,7 @@ const BatchFolio: React.FC = () => {
               <Table
                 columns={columnsWithNesting}
                 dataSource={paginatedRows}
+                rowKey="key"
                 rowSelection={{
                   type: 'checkbox',
                   columnWidth: 56,
@@ -632,7 +632,8 @@ const BatchFolio: React.FC = () => {
                 scroll={{ x: 'max-content', y: 400 }}
                 pagination={false}
                 style={{ marginTop: 24 }}
-                childrenColumnName="nonExistentProperty"
+                expandable={{ showExpandColumn: false, expandedRowRender: undefined }}
+                childrenColumnName={undefined}
                 rowClassName={record => record.isParent ? 'nesting-row-parent' : record.isChild ? 'nesting-row-child' : ''}
               />
             </div>
