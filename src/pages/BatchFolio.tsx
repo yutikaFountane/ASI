@@ -21,6 +21,7 @@ import { ReactComponent as InfoIcon } from '../assets/Icons/info icon.svg';
 import dayjs from 'dayjs';
 import update from 'immutability-helper';
 import ResponsiveMultiSelect from '../components/ResponsiveMultiSelect';
+import ExportSuccessAlert from '../components/ExportSuccessAlert';
 
 const roomTypes = ['Deluxe', 'Suite', 'Standard', 'Executive', 'Superior'];
 const roomTypeShortMap: Record<string, string> = {
@@ -304,7 +305,7 @@ const ReservationStatusTag: React.FC<{ status: string }> = ({ status }) => {
 
 const MANDATORY_COLUMNS = [
   { key: 'reservationId', label: 'Reservation ID' },
-  { key: 'pocFullName', label: 'Full name of POC' },
+  { key: 'pocFullName', label: 'Point of Contact' },
 ];
 const CUSTOMIZABLE_COLUMNS = [
   { key: 'checkInDate', label: 'Check-In Date' },
@@ -342,6 +343,8 @@ const BatchFolio: React.FC = () => {
     detailedFolio: true,
     registrationForm: true,
   });
+  const [showExportAlert, setShowExportAlert] = useState(false);
+  const [exportedDocs, setExportedDocs] = useState<string[]>([]);
 
   const handleSearch = (value: string) => {
     setSearchText(value);
@@ -503,13 +506,39 @@ const BatchFolio: React.FC = () => {
               }
               return <span>{text}</span>;
             }
-          : col.key === 'reservationStatus'
-            ? (status: string) => <ReservationStatusTag status={status} />
-            : col.key === 'totalCharges' || col.key === 'balance'
-              ? (value: number) => value.toFixed(2)
-              : col.key === 'checkInDate' || col.key === 'checkOutDate'
-                ? (value: string) => formatDate(value)
-                : (value: string) => <TruncateTooltipCell value={value} />,
+          : col.key === 'pocFullName'
+            ? (value: string, record: any) => {
+                // Generate placeholder email from name
+                const email = value ? value.toLowerCase().replace(/\s+/g, '.') + '@example.com' : '';
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+                    <span style={{ fontSize: 14, color: '#222', fontWeight: 500, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
+                    <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</span>
+                  </div>
+                );
+              }
+            : col.key === 'businessSource'
+              ? (value: string, record: any) => {
+                  let otaId = '';
+                  if (value === 'Expedia') otaId = 'CRS ID: 123456789';
+                  else if (value === 'Agoda') otaId = 'CRS ID: AG-987654';
+                  else if (value === 'Booking.com') otaId = 'CRS ID: 24680';
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+                      <span style={{ fontSize: 14, color: '#222', fontWeight: 500, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
+                      {otaId && (
+                        <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{otaId}</span>
+                      )}
+                    </div>
+                  );
+                }
+            : col.key === 'reservationStatus'
+              ? (status: string) => <ReservationStatusTag status={status} />
+              : col.key === 'totalCharges' || col.key === 'balance'
+                ? (value: number) => value.toFixed(2)
+                : col.key === 'checkInDate' || col.key === 'checkOutDate'
+                  ? (value: string) => formatDate(value)
+                  : (value: string) => <TruncateTooltipCell value={value} />,
       onCell:
         col.key === 'reservationId'
           ? (record: any) => record.isChild ? { className: 'nesting-cell-child' } : {}
@@ -596,26 +625,28 @@ const BatchFolio: React.FC = () => {
                 >
                   <Button icon={<ColumnsIcon style={{ width: 24, height: 24 }} />} className="batch-folio-toolbar-btn" />
                 </Dropdown>
-                <Button
-                  type="primary"
-                  icon={
-                    <ExportIcon
-                      style={{
-                        width: 18,
-                        height: 18,
-                        verticalAlign: 'middle',
-                        display: 'inline-block',
-                        marginTop: '-2px',
-                        color: selectedRowKeys.length === 0 ? 'rgba(0,0,0,0.25)' : '#fff'
-                      }}
-                    />
-                  }
-                  style={{ height: 40, fontSize: 14, lineHeight: '22px', fontWeight: 500 }}
-                  disabled={selectedRowKeys.length === 0}
-                  onClick={() => setExportModalOpen(true)}
-                >
-                  Export{selectedRowKeys.length > 0 ? ` (${selectedRowKeys.length})` : ''}
-                </Button>
+                {!exportModalOpen && (
+                  <Button
+                    type="primary"
+                    icon={
+                      <ExportIcon
+                        style={{
+                          width: 18,
+                          height: 18,
+                          verticalAlign: 'middle',
+                          display: 'inline-block',
+                          marginTop: '-2px',
+                          color: selectedRowKeys.length === 0 ? 'rgba(0,0,0,0.25)' : '#fff'
+                        }}
+                      />
+                    }
+                    style={{ height: 40, fontSize: 14, lineHeight: '22px', fontWeight: 500 }}
+                    disabled={selectedRowKeys.length === 0}
+                    onClick={() => setExportModalOpen(true)}
+                  >
+                    Export{selectedRowKeys.length > 0 ? ` (${selectedRowKeys.length})` : ''}
+                  </Button>
+                )}
               </div>
             </div>
             <div className="table-wrapper">
@@ -752,7 +783,19 @@ const BatchFolio: React.FC = () => {
         title={null}
         open={exportModalOpen}
         onCancel={() => setExportModalOpen(false)}
-        onOk={() => setExportModalOpen(false)}
+        onOk={() => {
+          setShowExportAlert(true);
+          const selectedDocs = Object.entries(exportOptions)
+            .filter(([_, checked]) => checked)
+            .map(([name]) => {
+              if (name === 'folio') return 'Folio';
+              if (name === 'detailedFolio') return 'Detailed Folio';
+              if (name === 'registrationForm') return 'Registration Form';
+              return name;
+            });
+          setExportedDocs(selectedDocs);
+          setExportModalOpen(false);
+        }}
         okText="Yes, Export"
         cancelText="No, Cancel"
         centered
@@ -787,6 +830,12 @@ const BatchFolio: React.FC = () => {
           </div>
         </div>
       </Modal>
+      {showExportAlert && (
+        <ExportSuccessAlert
+          folioNames={exportedDocs.join(', ')}
+          onClose={() => setShowExportAlert(false)}
+        />
+      )}
     </div>
   );
 };
