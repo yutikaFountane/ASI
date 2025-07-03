@@ -155,6 +155,27 @@ html, body, * {
   justify-content: flex-end;
 }
 
+.pagination-size-selector .ant-select {
+  position: relative !important;
+}
+
+.pagination-size-selector .ant-select-selector {
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  min-height: 40px !important;
+}
+
+.pagination-size-selector .ant-select-arrow {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: 12px !important;
+  margin-top: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 20px !important;
+}
+
 .ant-table-column-title {
   display: flex;
   align-items: center;
@@ -298,6 +319,7 @@ html, body, * {
   flex: unset;
   min-height: 0;
   overflow-y: auto;
+  border-right: none !important;
 }
 
 .table-wrapper {
@@ -316,7 +338,6 @@ html, body, * {
   min-width: 56px !important;
   max-width: 56px !important;
   box-sizing: border-box !important;
-  overflow: visible !important;
   padding: 0 !important;
 }
 
@@ -387,11 +408,13 @@ html, body, * {
 }
 
 .ant-table-cell:first-child {
-  border-left: 1px solid #f0f0f0;
+  border-left: none !important;
 }
 
 .ant-table-cell:last-child {
   border-right: 1px solid #f0f0f0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 /* Offset only the sort tooltip popup by 16px to the left, without moving the sort icon */
@@ -447,6 +470,14 @@ html, body, * {
 
 .ant-table-container {
   border-top: 1px solid #e5e6eb;
+  border-left: 1px solid #e5e6eb;
+  border-right: 1px solid #e5e6eb;
+  border-bottom: 1px solid #e5e6eb;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  overflow: hidden;
 }
 
 .nesting-rectangle {
@@ -521,4 +552,78 @@ table .ant-table-cell.nesting-cell-child {
   min-height: 40px !important;
   display: flex;
   align-items: center;
+}
+
+.ant-table-thead > tr > th:last-child {
+  border-top-right-radius: 8px;
+}
+
+.ant-table-tbody > tr:last-child > td:last-child {
+  border-bottom-right-radius: 8px;
+}
+
+.ant-table-thead > tr > th:last-child,
+.ant-table-tbody > tr:last-child > td:last-child,
+.ant-table-cell:last-child {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+/* Prevent Select tags from wrapping to a new line and keep only one row visible */
+.ant-select-selector {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+  align-items: center;
+  min-height: 40px; /* Adjust as needed for your design */
+}
+
+/* Force all table body rows and cells to exactly 49px height (excluding header) */
+.ant-table-tbody > tr:not(.ant-table-measure-row),
+.ant-table-tbody > tr:not(.ant-table-measure-row) > td,
+.ant-table-tbody .ant-table-row:not(.ant-table-measure-row),
+.ant-table-tbody .ant-table-cell:not(.ant-table-measure-row) {
+  height: 49px !important;
+  min-height: 49px !important;
+  max-height: 49px !important;
+  line-height: 49px !important;
+  vertical-align: middle !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Fix selection column height/alignment */
+.ant-table-tbody > tr > .ant-table-selection-column {
+  height: 49px !important;
+  min-height: 49px !important;
+  max-height: 49px !important;
+  line-height: 49px !important;
+  vertical-align: middle !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Remove extra margin/padding from table body */
+.ant-table-tbody {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Force border-collapse to remove spacing */
+.ant-table-content table {
+  border-collapse: collapse !important;
+}
+
+/* Ensure Ant Design measure row is always hidden and takes up no space */
+.ant-table-measure-row,
+.ant-table-measure-row > td,
+.ant-table-measure-row > td > div {
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  font-size: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
 } 
