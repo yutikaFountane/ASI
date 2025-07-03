@@ -20,6 +20,7 @@ import { ReactComponent as GripDotsVerticalIcon } from '../assets/Icons/grip-dot
 import { ReactComponent as InfoIcon } from '../assets/Icons/info icon.svg';
 import dayjs from 'dayjs';
 import update from 'immutability-helper';
+import ResponsiveMultiSelect from '../components/ResponsiveMultiSelect';
 
 const roomTypes = ['Deluxe', 'Suite', 'Standard', 'Executive', 'Superior'];
 const roomTypeShortMap: Record<string, string> = {
@@ -353,9 +354,8 @@ const BatchFolio: React.FC = () => {
     if (searchText.trim()) {
       const lower = searchText.trim().toLowerCase();
       data = data.filter(row =>
-        Object.values(row).some(val =>
-          String(val).toLowerCase().includes(lower)
-        )
+        (row.reservationId && String(row.reservationId).toLowerCase().includes(lower)) ||
+        (row.pocFullName && String(row.pocFullName).toLowerCase().includes(lower))
       );
     }
 
@@ -454,7 +454,7 @@ const BatchFolio: React.FC = () => {
   // Remove the separate rectangle column logic and revert to a single Reservation ID column
   const columnsWithNesting = visibleColumns.map(col => {
     let width;
-    if (col.key === 'reservationId') width = 180;
+    if (col.key === 'reservationId') width = 260;
     else if (col.key === 'pocFullName') width = 160;
     else if (col.key === 'checkInDate') width = 160;
     else if (col.key === 'checkOutDate') width = 160;
@@ -552,7 +552,7 @@ const BatchFolio: React.FC = () => {
             <div className="batch-folio-toolbar">
               <div>
                 <Input.Search
-                  placeholder="Search for res ID, guests, etc"
+                  placeholder="Search for reservation ID, guests"
                   allowClear
                   enterButton={<SearchOutlined />}
                   size="large"
@@ -629,14 +629,10 @@ const BatchFolio: React.FC = () => {
                   selectedRowKeys,
                   onChange: (selectedKeys: React.Key[]) => setSelectedRowKeys(selectedKeys),
                 }}
+                scroll={{ x: 'max-content', y: 400 }}
                 pagination={false}
-                style={{
-                    marginTop: 24,
-                    overflowY: 'auto',
-                    maxHeight: 'calc(100vh - 400px)',
-                  }}
-                // {...(isShortPage ? {} : { scroll: { x: 'max-content', y: 445 } })}
-                // childrenColumnName="nonExistentProperty"
+                style={{ marginTop: 24 }}
+                childrenColumnName="nonExistentProperty"
                 rowClassName={record => record.isParent ? 'nesting-row-parent' : record.isChild ? 'nesting-row-child' : ''}
               />
             </div>
@@ -707,48 +703,43 @@ const BatchFolio: React.FC = () => {
                   />
                 </Form.Item>
                 <Form.Item label="Reservation Status">
-                  <Select
-                    mode="multiple"
+                  <ResponsiveMultiSelect
                     value={pendingFilters.reservationStatus}
                     onChange={val => setPendingFilters(f => ({ ...f, reservationStatus: val }))}
                     options={RESERVATION_STATUSES.map(s => ({ value: s.value, label: s.label }))}
-                    style={{ width: '100%' }}
+                    placeholder="Select reservation status"
                   />
                 </Form.Item>
                 <Form.Item label="Buildings">
-                  <Select
-                    mode="multiple"
+                  <ResponsiveMultiSelect
                     value={pendingFilters.buildings}
                     onChange={val => setPendingFilters(f => ({ ...f, buildings: val }))}
                     options={BUILDINGS.map(b => ({ value: b, label: b }))}
-                    style={{ width: '100%' }}
+                    placeholder="Select buildings"
                   />
                 </Form.Item>
                 <Form.Item label="Floors">
-                  <Select
-                    mode="multiple"
+                  <ResponsiveMultiSelect
                     value={pendingFilters.floors}
                     onChange={val => setPendingFilters(f => ({ ...f, floors: val }))}
                     options={FLOORS.map(f => ({ value: f, label: f }))}
-                    style={{ width: '100%' }}
+                    placeholder="Select floors"
                   />
                 </Form.Item>
                 <Form.Item label="Business Sources">
-                  <Select
-                    mode="multiple"
+                  <ResponsiveMultiSelect
                     value={pendingFilters.businessSources}
                     onChange={val => setPendingFilters(f => ({ ...f, businessSources: val }))}
                     options={BUSINESS_SOURCES.map(s => ({ value: s, label: s }))}
-                    style={{ width: '100%' }}
+                    placeholder="Select business sources"
                   />
                 </Form.Item>
                 <Form.Item label="Room Types">
-                  <Select
-                    mode="multiple"
+                  <ResponsiveMultiSelect
                     value={pendingFilters.roomTypes}
                     onChange={val => setPendingFilters(f => ({ ...f, roomTypes: val }))}
                     options={getFullRoomTypes(finalData).map(rt => ({ value: rt, label: rt }))}
-                    style={{ width: '100%' }}
+                    placeholder="Select room types"
                   />
                 </Form.Item>
               </Form>

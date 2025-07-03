@@ -1,0 +1,22 @@
+/* ResponsiveMultiSelect.css */
+.responsive-multiselect .ant-select-selector {
+  min-height: 32px !important;
+  max-height: 32px !important;
+  height: 32px !important;
+  overflow-y: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+.responsive-multiselect .ant-select-selection-overflow {
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+}
+.responsive-multiselect .ant-select-selection-item {
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+} 
