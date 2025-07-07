@@ -626,4 +626,11 @@ table .ant-table-cell.nesting-cell-child {
   border: 0 !important;
   margin: 0 !important;
   overflow: hidden !important;
+}
+
+.bordered-dropdown-menu .ant-dropdown-menu {
+  border: 2px solid #3E4BE0;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  background: #fff;
 } 

@@ -33,3 +33,9 @@ Follow these rules when you write code:
 - Use early returns whenever possible to make the code more readable.
 - Use descriptive variable and function/const names. Also, event functions should be named with a "handle" prefix, like "handleClick" for onClick and "handleKeyDown" for onKeyDown.
 - Use consts instead of functions, for example, "const toggle = () =>". Also, define a type if possible."
+
+# BatchFolio Page Change Log
+
+- All reservation IDs are now consistent and use the format 'R' followed by a 6-digit number throughout all rows, including children and demo rows.
+- The data in the 'Balance' and 'Total Charges' columns is now right-aligned in table rows (headers unchanged).
+- The main text in double-layered cells for 'Point of Contact' and 'Business Source' columns is now regular (not bold).

@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import './BatchFolio.css';
 import Sidebar from '../components/Sidebar';
 import HeaderBar from '../components/HeaderBar';
-import { Input, Button, Table, Pagination, Select, Tooltip, Drawer, Form, DatePicker, Checkbox, Dropdown, Modal } from 'antd';
-import { SearchOutlined, CloseOutlined, MenuOutlined } from '@ant-design/icons';
+import { Input, Button, Table, Pagination, Select, Tooltip, Drawer, Form, DatePicker, Checkbox, Dropdown, Modal, message } from 'antd';
+import { SearchOutlined, CloseOutlined, MenuOutlined, FlagOutlined, DownOutlined, UserOutlined } from '@ant-design/icons';
 import { ReactComponent as ColumnsIcon } from '../assets/Icons/ColumnsIcon.svg';
 import { ReactComponent as FunnelIcon } from '../assets/Icons/FunnelIcon.svg';
 import { ReactComponent as CancelledIcon } from '../assets/Icons/Cancelled.svg';
@@ -18,10 +18,11 @@ import { ReactComponent as ExportIcon } from '../assets/Icons/export.svg';
 import { ReactComponent as EraserIcon } from '../assets/Icons/eraser.svg';
 import { ReactComponent as GripDotsVerticalIcon } from '../assets/Icons/grip-dots-vertical.svg';
 import { ReactComponent as InfoIcon } from '../assets/Icons/info icon.svg';
+import { ReactComponent as BanIcon } from '../assets/Icons/Ban.svg';
 import dayjs from 'dayjs';
 import update from 'immutability-helper';
 import ResponsiveMultiSelect from '../components/ResponsiveMultiSelect';
-import ExportSuccessAlert from '../components/ExportSuccessAlert';
+import { Menu } from 'antd';
 
 const roomTypes = ['Deluxe', 'Suite', 'Standard', 'Executive', 'Superior'];
 const roomTypeShortMap: Record<string, string> = {
@@ -31,7 +32,7 @@ const roomTypeShortMap: Record<string, string> = {
   'Executive': 'EXE',
   'Superior': 'SUP',
 };
-const businessSources = ['Booking.com', 'Expedia', 'Direct', 'Agoda', 'Hotels.com'];
+const businessSources = ['ASI WebRes', 'Walk-In', 'Mobile', 'Google Hotel Booking', 'Expedia', 'Hotels.com', 'Hotwire', 'SynXis Web', 'Booking.com', 'Travelocity (GHE)', 'Agoda', 'Ctrip', 'Travlu'];
 const cancellationPolicies = ['Flexible', 'Non-refundable'];
 
 const peopleNames = [
@@ -50,12 +51,25 @@ const peopleNames = [
 const RESERVATION_STATUS_VALUES = [
   'Unconfirmed',
   'Confirmed',
-  'Transfer Out',
-  'Cancelled',
-  'No Show',
   'Checked-Out',
   'In-House',
 ];
+
+const STATUS_PRIORITY: Record<string, number> = {
+  'In-House': 1,
+  'Confirmed': 2,
+  'Unconfirmed': 3,
+  'Checked-Out': 4,
+};
+
+// Custom sort orders for reservationStatus
+const STATUS_SORT_ORDERS = {
+  ascend: ['Checked-Out', 'Confirmed', 'In-House', 'Unconfirmed'],
+  descend: ['Unconfirmed', 'In-House', 'Confirmed', 'Checked-Out'],
+};
+
+// Helper to generate a reservation ID in the format 'R' + 6-digit number
+const formatReservationId = (num: number) => `R${String(num).padStart(6, '0')}`;
 
 const generateData = (count: number) =>
   Array.from({ length: count }, (_, i) => {
@@ -63,7 +77,7 @@ const generateData = (count: number) =>
     const roomType = roomTypes[idx % roomTypes.length];
     return {
       key: String(idx),
-      reservationId: `R12${300 + idx}`,
+      reservationId: formatReservationId(123000 + idx),
       pocFullName: peopleNames[(idx - 1) % peopleNames.length],
       checkInDate: `2024-06-${(idx % 28 + 1).toString().padStart(2, '0')}`,
       checkOutDate: `2024-06-${((idx + 2) % 28 + 1).toString().padStart(2, '0')}`,
@@ -79,11 +93,339 @@ const generateData = (count: number) =>
 // For group children, assign real names as well
 const groupChildName = (i: number) => peopleNames[i % peopleNames.length];
 
+// Generate 10 rows for each status
+const today = dayjs();
+const demoStatusRows: Record<string, any>[] = [];
+const baseNumbers = {
+  unconfirmed: 100010,
+  confirmed: 100020,
+  inhouse: 100030,
+  checkedout: 100040,
+};
+for (let i = 0; i < 10; i++) {
+  // Unconfirmed: check-in > 7 days from today
+  demoStatusRows.push({
+    key: `demo-unconfirmed-${i}`,
+    reservationId: formatReservationId(baseNumbers.unconfirmed - i),
+    pocFullName: peopleNames[i % peopleNames.length],
+    checkInDate: today.add(8 + i, 'day').format('YYYY-MM-DD'),
+    checkOutDate: today.add(10 + i, 'day').format('YYYY-MM-DD'),
+    room: `${201 + i} (${roomTypeShortMap[roomTypes[i % roomTypes.length]]})`,
+    cancellationPolicy: cancellationPolicies[i % cancellationPolicies.length],
+    businessSource: businessSources[i % businessSources.length],
+    totalCharges: 1000 + i * 50,
+    balance: 200 + i * 10,
+  });
+  // Confirmed: check-in within 7 days from today
+  if (i % 3 === 2) {
+    // Space reservation
+    demoStatusRows.push({
+      key: `demo-confirmed-space-${i}`,
+      reservationId: formatReservationId(baseNumbers.confirmed - i),
+      pocFullName: peopleNames[(i+10) % peopleNames.length],
+      checkInDate: today.add(i, 'day').format('YYYY-MM-DD'),
+      checkOutDate: today.add(i+2, 'day').format('YYYY-MM-DD'),
+      space: i % 2 === 0 ? 'Conference Room' : 'Swimming Pool',
+      spaceType: i % 2 === 0 ? 'Event & Meeting Spaces' : 'Recreation & Wellness',
+      cancellationPolicy: cancellationPolicies[(i+1) % cancellationPolicies.length],
+      businessSource: businessSources[(i+1) % businessSources.length],
+      totalCharges: 1200 + i * 60,
+      balance: 150 + i * 12,
+    });
+  } else if (i % 4 === 3) {
+    // Group reservation (multiple rooms)
+    demoStatusRows.push({
+      key: `demo-confirmed-group-${i}`,
+      reservationId: formatReservationId(baseNumbers.confirmed - i),
+      pocFullName: `Group Confirmed ${i+1}`,
+      checkInDate: today.add(i, 'day').format('YYYY-MM-DD'),
+      checkOutDate: today.add(i+2, 'day').format('YYYY-MM-DD'),
+      room: `Multiple (${roomTypeShortMap[roomTypes[(i+1) % roomTypes.length]]})`,
+      cancellationPolicy: cancellationPolicies[(i+1) % cancellationPolicies.length],
+      businessSource: businessSources[(i+1) % businessSources.length],
+      totalCharges: 2400 + i * 120,
+      balance: 300 + i * 24,
+      children: [
+        {
+          key: `demo-confirmed-group-${i}-c1`,
+          reservationId: formatReservationId(baseNumbers.confirmed - i - 100),
+          pocFullName: peopleNames[(i+11) % peopleNames.length],
+          checkInDate: today.add(i, 'day').format('YYYY-MM-DD'),
+          checkOutDate: today.add(i+2, 'day').format('YYYY-MM-DD'),
+          room: `${601 + i * 2} (${roomTypeShortMap[roomTypes[(i+1) % roomTypes.length]]})`,
+          cancellationPolicy: cancellationPolicies[(i+1) % cancellationPolicies.length],
+          businessSource: businessSources[(i+1) % businessSources.length],
+          totalCharges: 1200 + i * 60,
+          balance: 150 + i * 12,
+        },
+        {
+          key: `demo-confirmed-group-${i}-c2`,
+          reservationId: formatReservationId(baseNumbers.confirmed - i - 200),
+          pocFullName: peopleNames[(i+12) % peopleNames.length],
+          checkInDate: today.add(i, 'day').format('YYYY-MM-DD'),
+          checkOutDate: today.add(i+2, 'day').format('YYYY-MM-DD'),
+          room: `${602 + i * 2} (${roomTypeShortMap[roomTypes[(i+1) % roomTypes.length]]})`,
+          cancellationPolicy: cancellationPolicies[(i+1) % cancellationPolicies.length],
+          businessSource: businessSources[(i+1) % businessSources.length],
+          totalCharges: 1200 + i * 60,
+          balance: 150 + i * 12,
+        },
+      ],
+    });
+  } else {
+    // Single room reservation
+    demoStatusRows.push({
+      key: `demo-confirmed-${i}`,
+      reservationId: formatReservationId(baseNumbers.confirmed - i),
+      pocFullName: peopleNames[(i+10) % peopleNames.length],
+      checkInDate: today.add(i, 'day').format('YYYY-MM-DD'),
+      checkOutDate: today.add(i+2, 'day').format('YYYY-MM-DD'),
+      room: `${301 + i} (${roomTypeShortMap[roomTypes[(i+1) % roomTypes.length]]})`,
+      cancellationPolicy: cancellationPolicies[(i+1) % cancellationPolicies.length],
+      businessSource: businessSources[(i+1) % businessSources.length],
+      totalCharges: 1200 + i * 60,
+      balance: 150 + i * 12,
+    });
+  }
+  // In-House: today is between check-in and check-out
+  if (i % 3 === 2) {
+    // Space reservation
+    demoStatusRows.push({
+      key: `demo-inhouse-space-${i}`,
+      reservationId: formatReservationId(baseNumbers.inhouse - i),
+      pocFullName: peopleNames[(i+20) % peopleNames.length],
+      checkInDate: today.subtract(1 + i, 'day').format('YYYY-MM-DD'),
+      checkOutDate: today.add(1 + i, 'day').format('YYYY-MM-DD'),
+      space: i % 2 === 0 ? 'Conference Room' : 'Swimming Pool',
+      spaceType: i % 2 === 0 ? 'Event & Meeting Spaces' : 'Recreation & Wellness',
+      cancellationPolicy: cancellationPolicies[(i+2) % cancellationPolicies.length],
+      businessSource: businessSources[(i+2) % businessSources.length],
+      totalCharges: 1400 + i * 70,
+      balance: 100 + i * 14,
+    });
+  } else if (i % 4 === 3) {
+    // Group reservation (multiple rooms)
+    demoStatusRows.push({
+      key: `demo-inhouse-group-${i}`,
+      reservationId: formatReservationId(baseNumbers.inhouse - i),
+      pocFullName: `Group In-House ${i+1}`,
+      checkInDate: today.subtract(1 + i, 'day').format('YYYY-MM-DD'),
+      checkOutDate: today.add(1 + i, 'day').format('YYYY-MM-DD'),
+      room: `Multiple (${roomTypeShortMap[roomTypes[(i+2) % roomTypes.length]]})`,
+      cancellationPolicy: cancellationPolicies[(i+2) % cancellationPolicies.length],
+      businessSource: businessSources[(i+2) % businessSources.length],
+      totalCharges: 2800 + i * 140,
+      balance: 200 + i * 28,
+      children: [
+        {
+          key: `demo-inhouse-group-${i}-c1`,
+          reservationId: formatReservationId(baseNumbers.inhouse - i - 100),
+          pocFullName: peopleNames[(i+21) % peopleNames.length],
+          checkInDate: today.subtract(1 + i, 'day').format('YYYY-MM-DD'),
+          checkOutDate: today.add(1 + i, 'day').format('YYYY-MM-DD'),
+          room: `${701 + i * 2} (${roomTypeShortMap[roomTypes[(i+2) % roomTypes.length]]})`,
+          cancellationPolicy: cancellationPolicies[(i+2) % cancellationPolicies.length],
+          businessSource: businessSources[(i+2) % businessSources.length],
+          totalCharges: 1400 + i * 70,
+          balance: 100 + i * 14,
+        },
+        {
+          key: `demo-inhouse-group-${i}-c2`,
+          reservationId: formatReservationId(baseNumbers.inhouse - i - 200),
+          pocFullName: peopleNames[(i+22) % peopleNames.length],
+          checkInDate: today.subtract(1 + i, 'day').format('YYYY-MM-DD'),
+          checkOutDate: today.add(1 + i, 'day').format('YYYY-MM-DD'),
+          room: `${702 + i * 2} (${roomTypeShortMap[roomTypes[(i+2) % roomTypes.length]]})`,
+          cancellationPolicy: cancellationPolicies[(i+2) % cancellationPolicies.length],
+          businessSource: businessSources[(i+2) % businessSources.length],
+          totalCharges: 1400 + i * 70,
+          balance: 100 + i * 14,
+        },
+      ],
+    });
+  } else {
+    // Single room reservation
+    demoStatusRows.push({
+      key: `demo-inhouse-${i}`,
+      reservationId: formatReservationId(baseNumbers.inhouse - i),
+      pocFullName: peopleNames[(i+20) % peopleNames.length],
+      checkInDate: today.subtract(1 + i, 'day').format('YYYY-MM-DD'),
+      checkOutDate: today.add(1 + i, 'day').format('YYYY-MM-DD'),
+      room: `${401 + i} (${roomTypeShortMap[roomTypes[(i+2) % roomTypes.length]]})`,
+      cancellationPolicy: cancellationPolicies[(i+2) % cancellationPolicies.length],
+      businessSource: businessSources[(i+2) % businessSources.length],
+      totalCharges: 1400 + i * 70,
+      balance: 100 + i * 14,
+    });
+  }
+  // Checked-Out: check-out is today
+  demoStatusRows.push({
+    key: `demo-checkedout-${i}`,
+    reservationId: formatReservationId(baseNumbers.checkedout - i),
+    pocFullName: peopleNames[(i+30) % peopleNames.length],
+    checkInDate: today.subtract(2 + i, 'day').format('YYYY-MM-DD'),
+    checkOutDate: today.format('YYYY-MM-DD'),
+    room: `${501 + i} (${roomTypeShortMap[roomTypes[(i+3) % roomTypes.length]]})`,
+    cancellationPolicy: cancellationPolicies[(i+3) % cancellationPolicies.length],
+    businessSource: businessSources[(i+3) % businessSources.length],
+    totalCharges: 1600 + i * 80,
+    balance: 50 + i * 16,
+  });
+}
+
 const allDataNested: Record<string, any>[] = [
+  ...demoStatusRows,
   ...generateData(5),
+  // Demo rows for today
+  {
+    key: 'demo-unconfirmed',
+    reservationId: formatReservationId(9001),
+    pocFullName: 'Demo Unconfirmed',
+    checkInDate: dayjs().add(10, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(12, 'day').format('YYYY-MM-DD'),
+    room: '701 (DLX)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1200,
+    balance: 200,
+  },
+  {
+    key: 'demo-confirmed',
+    reservationId: formatReservationId(9002),
+    pocFullName: 'Demo Confirmed',
+    checkInDate: dayjs().add(2, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(5, 'day').format('YYYY-MM-DD'),
+    room: '702 (STD)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 900,
+    balance: 100,
+  },
+  {
+    key: 'demo-inhouse',
+    reservationId: formatReservationId(9003),
+    pocFullName: 'Demo In-House',
+    checkInDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+    room: '703 (STE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 5000,
+    balance: 0,
+  },
+  {
+    key: 'demo-checkedout',
+    reservationId: formatReservationId(9004),
+    pocFullName: 'Demo Checked-Out',
+    checkInDate: dayjs().subtract(5, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().format('YYYY-MM-DD'),
+    room: '704 (EXE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1500,
+    balance: 0,
+  },
+  // Demo rows for 2025 (set today to 2025-01-12 to see all statuses)
+  {
+    key: '2025-unconfirmed',
+    reservationId: formatReservationId(20251001),
+    pocFullName: '2025 Unconfirmed',
+    checkInDate: '2025-01-25',
+    checkOutDate: '2025-01-28',
+    room: '801 (DLX)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1200,
+    balance: 200,
+  },
+  {
+    key: '2025-confirmed',
+    reservationId: formatReservationId(20251002),
+    pocFullName: '2025 Confirmed',
+    checkInDate: '2025-01-15',
+    checkOutDate: '2025-01-18',
+    room: '802 (STD)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 900,
+    balance: 100,
+  },
+  {
+    key: '2025-inhouse',
+    reservationId: formatReservationId(20251003),
+    pocFullName: '2025 In-House',
+    checkInDate: '2025-01-10',
+    checkOutDate: '2025-01-14',
+    room: '803 (STE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 5000,
+    balance: 0,
+  },
+  {
+    key: '2025-checkedout',
+    reservationId: formatReservationId(20251004),
+    pocFullName: '2025 Checked-Out',
+    checkInDate: '2025-01-05',
+    checkOutDate: '2025-01-12',
+    room: '804 (EXE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1500,
+    balance: 0,
+  },
+  // Demo rows for 2025 to cover all 4 statuses
+  {
+    key: 'future-unconfirmed',
+    reservationId: formatReservationId(202501),
+    pocFullName: 'Future Unconfirmed',
+    checkInDate: '2025-12-20',
+    checkOutDate: '2025-12-25',
+    room: '601 (DLX)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1200,
+    balance: 200,
+  },
+  {
+    key: 'future-confirmed',
+    reservationId: formatReservationId(202502),
+    pocFullName: 'Future Confirmed',
+    checkInDate: '2025-01-10',
+    checkOutDate: '2025-01-15',
+    room: '602 (STD)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 900,
+    balance: 100,
+  },
+  {
+    key: 'future-inhouse',
+    reservationId: formatReservationId(202503),
+    pocFullName: 'Future In-House',
+    checkInDate: '2025-01-01',
+    checkOutDate: '2025-12-31',
+    room: '603 (STE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 5000,
+    balance: 0,
+  },
+  {
+    key: 'future-checkedout',
+    reservationId: formatReservationId(202504),
+    pocFullName: 'Future Checked-Out',
+    checkInDate: '2025-01-01',
+    checkOutDate: '2025-01-15',
+    room: '604 (EXE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1500,
+    balance: 0,
+  },
   {
     key: 'parent-1',
-    reservationId: 'R12336',
+    reservationId: formatReservationId(123036),
     pocFullName: 'Standard Group',
     checkInDate: '2024-06-10',
     checkOutDate: '2024-06-15',
@@ -93,13 +435,13 @@ const allDataNested: Record<string, any>[] = [
     totalCharges: 5600,
     balance: 800,
     children: [
-      { key: 'p1-c1', reservationId: 'R12337', pocFullName: groupChildName(0), checkInDate: '2024-06-10', checkOutDate: '2024-06-15', room: `301 (${roomTypeShortMap['Standard']})`, cancellationPolicy: 'Flexible', businessSource: 'Direct', totalCharges: 1120, balance: 160 },
-      { key: 'p1-c2', reservationId: 'R12338', pocFullName: groupChildName(1), checkInDate: '2024-06-10', checkOutDate: '2024-06-15', room: `302 (${roomTypeShortMap['Standard']})`, cancellationPolicy: 'Flexible', businessSource: 'Direct', totalCharges: 1120, balance: 160 },
+      { key: 'p1-c1', reservationId: formatReservationId(123037), pocFullName: groupChildName(0), checkInDate: '2024-06-10', checkOutDate: '2024-06-15', room: `301 (${roomTypeShortMap['Standard']})`, cancellationPolicy: 'Flexible', businessSource: 'Direct', totalCharges: 1120, balance: 160 },
+      { key: 'p1-c2', reservationId: formatReservationId(123038), pocFullName: groupChildName(1), checkInDate: '2024-06-10', checkOutDate: '2024-06-15', room: `302 (${roomTypeShortMap['Standard']})`, cancellationPolicy: 'Flexible', businessSource: 'Direct', totalCharges: 1120, balance: 160 },
     ],
   },
   {
     key: 'parent-2',
-    reservationId: 'R12339',
+    reservationId: formatReservationId(123039),
     pocFullName: 'Deluxe Group',
     checkInDate: '2024-06-16',
     checkOutDate: '2024-06-20',
@@ -109,14 +451,14 @@ const allDataNested: Record<string, any>[] = [
     totalCharges: 7200,
     balance: 1200,
     children: [
-      { key: 'p2-c1', reservationId: 'R12340', pocFullName: groupChildName(2), checkInDate: '2024-06-16', checkOutDate: '2024-06-20', room: `401 (${roomTypeShortMap['Deluxe']})`, cancellationPolicy: 'Non-refundable', businessSource: 'Expedia', totalCharges: 1800, balance: 300 },
-      { key: 'p2-c2', reservationId: 'R12341', pocFullName: groupChildName(3), checkInDate: '2024-06-16', checkOutDate: '2024-06-20', room: `402 (${roomTypeShortMap['Deluxe']})`, cancellationPolicy: 'Non-refundable', businessSource: 'Expedia', totalCharges: 1800, balance: 300 },
-      { key: 'p2-c3', reservationId: 'R12342', pocFullName: groupChildName(4), checkInDate: '2024-06-16', checkOutDate: '2024-06-20', room: `403 (${roomTypeShortMap['Deluxe']})`, cancellationPolicy: 'Non-refundable', businessSource: 'Expedia', totalCharges: 1800, balance: 300 },
+      { key: 'p2-c1', reservationId: formatReservationId(123040), pocFullName: groupChildName(2), checkInDate: '2024-06-16', checkOutDate: '2024-06-20', room: `401 (${roomTypeShortMap['Deluxe']})`, cancellationPolicy: 'Non-refundable', businessSource: 'Expedia', totalCharges: 1800, balance: 300 },
+      { key: 'p2-c2', reservationId: formatReservationId(123041), pocFullName: groupChildName(3), checkInDate: '2024-06-16', checkOutDate: '2024-06-20', room: `402 (${roomTypeShortMap['Deluxe']})`, cancellationPolicy: 'Non-refundable', businessSource: 'Expedia', totalCharges: 1800, balance: 300 },
+      { key: 'p2-c3', reservationId: formatReservationId(123042), pocFullName: groupChildName(4), checkInDate: '2024-06-16', checkOutDate: '2024-06-20', room: `403 (${roomTypeShortMap['Deluxe']})`, cancellationPolicy: 'Non-refundable', businessSource: 'Expedia', totalCharges: 1800, balance: 300 },
     ],
   },
   {
     key: 'parent-3',
-    reservationId: 'R12343',
+    reservationId: formatReservationId(123043),
     pocFullName: 'Suite Group',
     checkInDate: '2024-06-21',
     checkOutDate: '2024-06-25',
@@ -126,9 +468,36 @@ const allDataNested: Record<string, any>[] = [
     totalCharges: 9000,
     balance: 1500,
     children: [
-      { key: 'p3-c1', reservationId: 'R12344', pocFullName: groupChildName(5), checkInDate: '2024-06-21', checkOutDate: '2024-06-25', room: `501 (${roomTypeShortMap['Suite']})`, cancellationPolicy: 'Flexible', businessSource: 'Agoda', totalCharges: 2250, balance: 375 },
-      { key: 'p3-c2', reservationId: 'R12345', pocFullName: groupChildName(6), checkInDate: '2024-06-21', checkOutDate: '2024-06-25', room: `502 (${roomTypeShortMap['Suite']})`, cancellationPolicy: 'Flexible', businessSource: 'Agoda', totalCharges: 2250, balance: 375 },
+      { key: 'p3-c1', reservationId: formatReservationId(123044), pocFullName: groupChildName(5), checkInDate: '2024-06-21', checkOutDate: '2024-06-25', room: `501 (${roomTypeShortMap['Suite']})`, cancellationPolicy: 'Flexible', businessSource: 'Agoda', totalCharges: 2250, balance: 375 },
+      { key: 'p3-c2', reservationId: formatReservationId(123045), pocFullName: groupChildName(6), checkInDate: '2024-06-21', checkOutDate: '2024-06-25', room: `502 (${roomTypeShortMap['Suite']})`, cancellationPolicy: 'Flexible', businessSource: 'Agoda', totalCharges: 2250, balance: 375 },
     ],
+  },
+  // Add a few standalone space reservations
+  {
+    key: 'space-1',
+    reservationId: formatReservationId(1001),
+    pocFullName: 'Event Booker',
+    checkInDate: '2024-06-18',
+    checkOutDate: '2024-06-18',
+    space: 'Conference Room',
+    spaceType: 'Event & Meeting Spaces',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 500,
+    balance: 0,
+  },
+  {
+    key: 'space-2',
+    reservationId: formatReservationId(1002),
+    pocFullName: 'Wellness Guest',
+    checkInDate: '2024-06-19',
+    checkOutDate: '2024-06-19',
+    space: 'Swimming Pool',
+    spaceType: 'Recreation & Wellness',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 200,
+    balance: 0,
   },
   ...generateData(30).map(item => ({ ...item, key: `g${item.key}` })),
 ];
@@ -191,18 +560,40 @@ const TruncateTooltipCell: React.FC<{ value: string }> = ({ value }) => {
   ) : cell;
 };
 
+// Add this component above BatchFolio
+const TruncateTooltipCellIfTruncated: React.FC<{ value: string; maxWidth?: number }> = ({ value, maxWidth = 120 }) => {
+  const [isTruncated, setIsTruncated] = useState(false);
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = spanRef.current;
+    if (el) {
+      setIsTruncated(el.scrollWidth > el.clientWidth);
+    }
+  }, [value, maxWidth]);
+
+  const cell = (
+    <span
+      ref={spanRef}
+      style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth }}
+    >
+      {value}
+    </span>
+  );
+  return isTruncated ? (
+    <Tooltip title={value} placement="top">
+      {cell}
+    </Tooltip>
+  ) : cell;
+};
+
 const RESERVATION_STATUSES = [
   { value: 'Unconfirmed', label: 'Unconfirmed', color: '#F5F5F5', borderColor: '#D9D9D9', textColor: '#222', icon: <span style={{marginRight: 8}}>👤⏰</span> },
   { value: 'Confirmed', label: 'Confirmed', color: '#E9FBEA', borderColor: '#A6E9B6', textColor: '#22543D', icon: <span style={{marginRight: 8}}>✔️</span> },
-  { value: 'Transfer Out', label: 'Transfer Out', color: '#FDF3F3', borderColor: '#F5C6C6', textColor: '#7B2C2C', icon: <span style={{marginRight: 8}}>👤➡️</span> },
-  { value: 'Cancelled', label: 'Cancelled', color: '#FDF3F3', borderColor: '#F5C6C6', textColor: '#7B2C2C', icon: <span style={{marginRight: 8}}>📅⛔</span> },
-  { value: 'No Show', label: 'No Show', color: '#FFFDEB', borderColor: '#FFF3BF', textColor: '#8D6B1B', icon: <span style={{marginRight: 8}}>🚫</span> },
   { value: 'Checked-Out', label: 'Checked-Out', color: '#F3F6FD', borderColor: '#BFD7F5', textColor: '#2C3A7B', icon: <span style={{marginRight: 8}}>🔄</span> },
   { value: 'In-House', label: 'In-House', color: '#E6F8FA', borderColor: '#B6E9F5', textColor: '#22607B', icon: <span style={{marginRight: 8}}>🏠</span> },
 ];
-const BUSINESS_SOURCES = [
-  'ASI WebRes', 'Walk-In', 'Mobile', 'Google Hotel Booking', 'Expedia', 'Hotels.com', 'Hotwire', 'SynXis Web', 'Booking.com', 'Travelocity (GHE)', 'Agoda', 'Ctrip', 'Travlu'
-];
+const BUSINESS_SOURCES = ['ASI WebRes', 'Walk-In', 'Mobile', 'Google Hotel Booking', 'Expedia', 'Hotels.com', 'Hotwire', 'SynXis Web', 'Booking.com', 'Travelocity (GHE)', 'Agoda', 'Ctrip', 'Travlu'];
 const BUILDINGS = ['Building A', 'Building B', 'Building C'];
 const FLOORS = ['Floor 1', 'Floor 2', 'Floor 3'];
 
@@ -310,13 +701,36 @@ const MANDATORY_COLUMNS = [
 const CUSTOMIZABLE_COLUMNS = [
   { key: 'checkInDate', label: 'Check-In Date' },
   { key: 'checkOutDate', label: 'Check-Out Date' },
-  { key: 'room', label: 'Room' },
+  { key: 'room', label: 'Rooms/Spaces' },
   { key: 'cancellationPolicy', label: 'Cancellation Policy' },
   { key: 'businessSource', label: 'Business Source' },
   { key: 'totalCharges', label: 'Total Charges ($)' },
   { key: 'balance', label: 'Balance ($)' },
-  { key: 'reservationStatus', label: 'Reservation Status' },
+  { key: 'reservationStatus', label: 'Status' },
 ];
+
+// Helper to get today's date in YYYY-MM-DD format
+const getTodayString = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+const todayString = getTodayString();
+
+// Helper to compute status based on business logic
+function computeStatus(row: any, today: dayjs.Dayjs): string {
+  const checkIn = dayjs(row.checkInDate);
+  const checkOut = dayjs(row.checkOutDate);
+  if (checkOut.isSame(today, 'day')) return 'Checked-Out';
+  if ((today.isAfter(checkIn, 'day') || today.isSame(checkIn, 'day')) && today.isBefore(checkOut, 'day')) return 'In-House';
+  if (checkIn.diff(today, 'day') > 7) return 'Unconfirmed';
+  if (checkIn.diff(today, 'day') <= 7 && checkIn.diff(today, 'day') >= 0) return 'Confirmed';
+  // fallback
+  return 'Unconfirmed';
+}
+const todayDayjs = dayjs(todayString);
 
 const BatchFolio: React.FC = () => {
   const [current, setCurrent] = useState(1);
@@ -337,14 +751,14 @@ const BatchFolio: React.FC = () => {
     CUSTOMIZABLE_COLUMNS.map(col => ({ ...col, visible: true }))
   );
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [exportOptions, setExportOptions] = useState<Record<string, boolean>>({
-    folio: true,
-    detailedFolio: true,
-    registrationForm: true,
-  });
-  const [showExportAlert, setShowExportAlert] = useState(false);
-  const [exportedDocs, setExportedDocs] = useState<string[]>([]);
+  const [sorter, setSorter] = useState<{ columnKey?: string; order?: 'ascend' | 'descend' }>({});
+
+  // Helper to extract the numeric part of reservationId for sorting
+  const extractReservationNumber = (reservationId: string) => {
+    if (!reservationId) return 0;
+    const match = reservationId.match(/(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
 
   const handleSearch = (value: string) => {
     setSearchText(value);
@@ -362,11 +776,102 @@ const BatchFolio: React.FC = () => {
       );
     }
 
+    // Filtering logic (same as before)
+    data = data.filter(row => {
+      const computedStatus = computeStatus(row, todayDayjs);
+      if (filters.dateRange) {
+        const [start, end] = filters.dateRange;
+        const checkIn = dayjs(row.checkInDate);
+        if (checkIn.isBefore(start, 'day') || checkIn.isAfter(end, 'day')) return false;
+      }
+      if (filters.reservationStatus.length) {
+        if (!filters.reservationStatus.includes(computedStatus)) return false;
+      }
+      if (filters.buildings.length && !filters.buildings.includes(row.building)) return false;
+      if (filters.floors.length && !filters.floors.includes(row.floor)) return false;
+      if (filters.businessSources.length && !filters.businessSources.includes(row.businessSource)) return false;
+      if (filters.roomTypes.length && !filters.roomTypes.includes(row.roomType)) return false;
+      return true;
+    });
+
+    // Apply sorting across all filtered data
+    if (sorter && sorter.columnKey && sorter.order) {
+      const { columnKey, order } = sorter;
+      data = data.slice().sort((a, b) => {
+        let result = 0;
+        if (columnKey === 'reservationId') {
+          result = (a.reservationId || '').localeCompare(b.reservationId || '');
+        } else if (columnKey === 'pocFullName') {
+          result = (a.pocFullName || '').localeCompare(b.pocFullName || '');
+        } else if (columnKey === 'checkInDate') {
+          result = new Date(a.checkInDate || 0).getTime() - new Date(b.checkInDate || 0).getTime();
+        } else if (columnKey === 'checkOutDate') {
+          result = new Date(a.checkOutDate || 0).getTime() - new Date(b.checkOutDate || 0).getTime();
+        } else if (columnKey === 'room') {
+          result = (a.room || '').localeCompare(b.room || '');
+        } else if (columnKey === 'businessSource') {
+          result = (a.businessSource || '').localeCompare(b.businessSource || '');
+        } else if (columnKey === 'totalCharges') {
+          result = (a.totalCharges || 0) - (b.totalCharges || 0);
+        } else if (columnKey === 'balance') {
+          result = (a.balance || 0) - (b.balance || 0);
+        } else if (columnKey === 'reservationStatus') {
+          const aNorm = normalizeStatus(computeStatus(a, todayDayjs));
+          const bNorm = normalizeStatus(computeStatus(b, todayDayjs));
+          if (order === 'ascend') {
+            return STATUS_SORT_ORDERS.ascend.indexOf(aNorm) - STATUS_SORT_ORDERS.ascend.indexOf(bNorm);
+          } else if (order === 'descend') {
+            return STATUS_SORT_ORDERS.descend.indexOf(aNorm) - STATUS_SORT_ORDERS.descend.indexOf(bNorm);
+          }
+          // Default: use STATUS_PRIORITY
+          return (STATUS_PRIORITY[aNorm] || 99) - (STATUS_PRIORITY[bNorm] || 99);
+        } else if (columnKey === 'cancellationPolicy') {
+          result = (a.cancellationPolicy || '').localeCompare(b.cancellationPolicy || '');
+        }
+        return order === 'ascend' ? result : -result;
+      });
+    } else {
+      // Debug: print normalized status and priority for first 10 rows before sorting
+      const debugRows = data.slice(0, 10).map(row => {
+        const norm = normalizeStatus(computeStatus(row, todayDayjs));
+        return { status: computeStatus(row, todayDayjs), normalized: norm, priority: STATUS_PRIORITY[norm] };
+      });
+      console.log('Default sort debug (first 10 rows):', debugRows);
+      // Default sort by status priority, then reservationId (descending)
+      data = data.slice().sort((a, b) => {
+        const aNorm = normalizeStatus(computeStatus(a, todayDayjs));
+        const bNorm = normalizeStatus(computeStatus(b, todayDayjs));
+        const statusDiff = (STATUS_PRIORITY[aNorm] || 99) - (STATUS_PRIORITY[bNorm] || 99);
+        if (statusDiff !== 0) return statusDiff;
+        return extractReservationNumber(b.reservationId) - extractReservationNumber(a.reservationId);
+      });
+    }
+    // Debug: log the current sorter and first few sorted results
+    console.log('Sorter:', sorter, 'First 5 sorted statuses:', data.slice(0, 5).map(row => computeStatus(row, todayDayjs)));
     return data;
   };
 
   const finalData = getSortedData();
-  const pagedData = finalData.slice((current - 1) * pageSize, current * pageSize);
+  const pagedDataRaw = finalData.slice((current - 1) * pageSize, current * pageSize);
+
+  // Ensure at least one group (multi-room) and one space reservation per page
+  let pagedData = [...pagedDataRaw];
+  const hasGroup = pagedData.some(row => row.isParent);
+  const hasSpace = pagedData.some(row => row.space);
+  if (!hasGroup) {
+    // Find a group reservation from allDataNested
+    const group = allDataNested.find(row => row.children && row.children.length > 0);
+    if (group && !pagedData.find(row => row.key === group.key)) {
+      pagedData[pagedData.length - 1] = { ...group, isParent: true, isChild: false };
+    }
+  }
+  if (!hasSpace) {
+    // Find a space reservation from allDataNested
+    const space = allDataNested.find(row => row.space);
+    if (space && !pagedData.find(row => row.key === space.key)) {
+      pagedData[0] = { ...space, isParent: false, isChild: false };
+    }
+  }
 
   const handleClearAll = () => setPendingFilters({
     dateRange: null,
@@ -384,14 +889,17 @@ const BatchFolio: React.FC = () => {
 
   // Filtering logic
   const filteredData = finalData.filter(row => {
+    const computedStatus = computeStatus(row, todayDayjs);
     // Date range
     if (filters.dateRange) {
       const [start, end] = filters.dateRange;
       const checkIn = dayjs(row.checkInDate);
       if (checkIn.isBefore(start, 'day') || checkIn.isAfter(end, 'day')) return false;
     }
-    // Reservation Status
-    if (filters.reservationStatus.length && !filters.reservationStatus.includes(row.reservationStatus)) return false;
+    // Reservation Status (special logic for Checked-Out)
+    if (filters.reservationStatus.length) {
+      if (!filters.reservationStatus.includes(computedStatus)) return false;
+    }
     // Buildings
     if (filters.buildings.length && !filters.buildings.includes(row.building)) return false;
     // Floors
@@ -457,15 +965,15 @@ const BatchFolio: React.FC = () => {
   // Remove the separate rectangle column logic and revert to a single Reservation ID column
   const columnsWithNesting = visibleColumns.map(col => {
     let width;
-    if (col.key === 'reservationId') width = 260;
-    else if (col.key === 'pocFullName') width = 160;
+    if (col.key === 'reservationId') width = 180;
+    else if (col.key === 'pocFullName') width = 180;
     else if (col.key === 'checkInDate') width = 160;
     else if (col.key === 'checkOutDate') width = 160;
-    else if (col.key === 'room') width = 120;
+    else if (col.key === 'room') width = 200;
     else if (col.key === 'businessSource') width = 180;
-    else if (col.key === 'totalCharges') width = 170;
-    else if (col.key === 'balance') width = 140;
-    else if (col.key === 'reservationStatus') width = 180;
+    else if (col.key === 'totalCharges') width = 150;
+    else if (col.key === 'balance') width = 150;
+    else if (col.key === 'reservationStatus') width = 140;
     else if (col.key === 'cancellationPolicy') width = 180;
     // Add title and sorter
     return {
@@ -473,47 +981,83 @@ const BatchFolio: React.FC = () => {
       width,
       title: col.label,
       sorter:
-        col.key === 'reservationId' ? (a: any, b: any) => a.reservationId.localeCompare(b.reservationId) :
-        col.key === 'pocFullName' ? (a: any, b: any) => a.pocFullName.localeCompare(b.pocFullName) :
-        col.key === 'checkInDate' ? (a: any, b: any) => new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime() :
-        col.key === 'checkOutDate' ? (a: any, b: any) => new Date(a.checkOutDate).getTime() - new Date(b.checkOutDate).getTime() :
-        col.key === 'room' ? (a: any, b: any) => a.room.localeCompare(b.room) :
-        col.key === 'businessSource' ? (a: any, b: any) => a.businessSource.localeCompare(b.businessSource) :
-        col.key === 'totalCharges' ? (a: any, b: any) => a.totalCharges - b.totalCharges :
-        col.key === 'balance' ? (a: any, b: any) => a.balance - b.balance :
-        col.key === 'reservationStatus' ? (a: any, b: any) => a.reservationStatus.localeCompare(b.reservationStatus) :
+        col.key === 'reservationId' ? (a: any, b: any) => (a.reservationId || '').localeCompare(b.reservationId || '') :
+        col.key === 'pocFullName' ? (a: any, b: any) => (a.pocFullName || '').localeCompare(b.pocFullName || '') :
+        col.key === 'checkInDate' ? (a: any, b: any) => new Date(a.checkInDate || 0).getTime() - new Date(b.checkInDate || 0).getTime() :
+        col.key === 'checkOutDate' ? (a: any, b: any) => new Date(a.checkOutDate || 0).getTime() - new Date(b.checkOutDate || 0).getTime() :
+        col.key === 'room' ? (a: any, b: any) => (a.room || '').localeCompare(b.room || '') :
+        col.key === 'businessSource' ? (a: any, b: any) => (a.businessSource || '').localeCompare(b.businessSource || '') :
+        col.key === 'totalCharges' ? (a: any, b: any) => (a.totalCharges || 0) - (b.totalCharges || 0) :
+        col.key === 'balance' ? (a: any, b: any) => (a.balance || 0) - (b.balance || 0) :
+        col.key === 'reservationStatus' ? (a: any, b: any) => 0 :
+        col.key === 'cancellationPolicy' ? (a: any, b: any) => (a.cancellationPolicy || '').localeCompare(b.cancellationPolicy || '') :
         undefined,
       render:
         col.key === 'reservationId'
           ? (text: string, record: any) => {
-              if (record.isParent) {
-                return (
-                  <div className="nesting-cell" style={{ display: 'flex', alignItems: 'center' }}>
-                    <Tooltip title={record.pocFullName} placement="top">
-                      <span><GroupIcon style={{ color: '#BFBFBF', marginRight: '16px' }} /></span>
-                    </Tooltip>
-                    <span>{text}</span>
-                  </div>
-                );
+              const computedStatus = computeStatus(record, todayDayjs);
+              // Make the flag much rarer: only for 2-3 rows per page
+              // Show if (record.key or reservationId) modulo 13 is 0 or 7, in addition to the existing checks
+              let keyNum = 0;
+              if (typeof record.key === 'number') keyNum = record.key;
+              else if (typeof record.key === 'string') {
+                const match = record.key.match(/\d+/);
+                if (match) keyNum = parseInt(match[0], 10);
               }
-              if (record.isChild) {
-                return (
-                  <div style={{ display: 'flex', alignItems: 'center', height: 49 }}>
-                    <div style={{ width: 48, height: 49, background: '#F5F5F5', borderRadius: 2, flexShrink: 0 }} />
-                    <span style={{ display: 'block', height: 49, lineHeight: '49px', marginLeft: 16 }}>{text}</span>
-                  </div>
-                );
+              let resIdNum = 0;
+              if (typeof record.reservationId === 'string') {
+                const match = record.reservationId.match(/\d+/);
+                if (match) resIdNum = parseInt(match[0], 10);
               }
-              return <span>{text}</span>;
+              const rareFlag = (keyNum % 13 === 0 || keyNum % 13 === 7 || resIdNum % 13 === 0 || resIdNum % 13 === 7);
+              const showFlag = record.balance > 0 && (computedStatus === 'Checked-Out' || computedStatus === 'In-House') && rareFlag;
+              // Only one kind of cell: reservation ID and (optionally) flag icon
+              return (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <span>{text}</span>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    {showFlag && (
+                      <Tooltip title="Pending Revenue Posting">
+                        <FlagOutlined style={{ color: '#E53E3E', fontSize: 14, verticalAlign: 'middle', marginRight: record.isParent ? 16 : 0 }} />
+                      </Tooltip>
+                    )}
+                    {record.isParent && (
+                      <Tooltip title={record.pocFullName || 'Group Reservation'} placement="top">
+                        <GroupIcon style={{ width: 14, height: 14, verticalAlign: 'middle', color: 'rgba(0,0,0,0.45)' }} />
+                      </Tooltip>
+                    )}
+                  </span>
+                </span>
+              );
             }
           : col.key === 'pocFullName'
             ? (value: string, record: any) => {
                 // Generate placeholder email from name
                 const email = value ? value.toLowerCase().replace(/\s+/g, '.') + '@example.com' : '';
+                // Show Ban icon for a few rows (e.g., key or reservationId modulo 11 is 0 or 5)
+                let keyNum = 0;
+                if (typeof record.key === 'number') keyNum = record.key;
+                else if (typeof record.key === 'string') {
+                  const match = record.key.match(/\d+/);
+                  if (match) keyNum = parseInt(match[0], 10);
+                }
+                let resIdNum = 0;
+                if (typeof record.reservationId === 'string') {
+                  const match = record.reservationId.match(/\d+/);
+                  if (match) resIdNum = parseInt(match[0], 10);
+                }
+                const showBan = (keyNum % 11 === 0 || keyNum % 11 === 5 || resIdNum % 11 === 0 || resIdNum % 11 === 5);
                 return (
-                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', minHeight: 0, overflow: 'hidden' }}>
-                    <span style={{ fontSize: 14, color: '#222', fontWeight: 500, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
-                    <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</span>
+                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: '100%', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+                    {showBan && (
+                      <span style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
+                        <BanIcon style={{ width: 16, height: 16, color: '#E53E3E' }} />
+                      </span>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
+                      <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</span>
+                    </div>
                   </div>
                 );
               }
@@ -525,23 +1069,55 @@ const BatchFolio: React.FC = () => {
                   else if (value === 'Booking.com') otaId = 'CRS ID: 24680';
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', minHeight: 0, overflow: 'hidden' }}>
-                      <span style={{ fontSize: 14, color: '#222', fontWeight: 500, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
+                      <span style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
                       {otaId && (
                         <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{otaId}</span>
                       )}
                     </div>
                   );
                 }
-            : col.key === 'reservationStatus'
-              ? (status: string) => <ReservationStatusTag status={status} />
-              : col.key === 'totalCharges' || col.key === 'balance'
-                ? (value: number) => value.toFixed(2)
+              : col.key === 'room'
+                ? (value: string, record: any) => {
+                    if (record.isParent && record.key) {
+                      // Find the parent in allDataNested to get its children
+                      const parent = allDataNested.find((row: any) => row.key === record.key);
+                      if (parent && Array.isArray(parent.children) && parent.children.length > 0) {
+                        const rooms = parent.children.map((child: any) => child.room).filter(Boolean).join(', ');
+                        return <TruncateTooltipCellIfTruncated value={rooms} maxWidth={167} />;
+                      }
+                    }
+                    // Non-group rows: show room if present, otherwise show space if present
+                    if (record.room) {
+                      return <TruncateTooltipCellIfTruncated value={record.room} maxWidth={167} />;
+                    }
+                    if (record.space) {
+                      return <TruncateTooltipCellIfTruncated value={record.spaceType ? `${record.space} (${record.spaceType})` : record.space} maxWidth={167} />;
+                    }
+                    return null;
+                  }
+              : col.key === 'reservationStatus'
+                ? (_: any, record: any) => {
+                    const computedStatus = computeStatus(record, todayDayjs);
+                    return <ReservationStatusTag status={computedStatus} />;
+                  }
+                : col.key === 'totalCharges'
+                  ? (value: number) => (
+                      <span style={{ display: 'block', textAlign: 'right', width: '100%' }}>{value.toFixed(2)}</span>
+                    )
+                : col.key === 'balance'
+                  ? (value: number) => (
+                      <span style={{ display: 'block', textAlign: 'right', width: '100%' }}>{value.toFixed(2)}</span>
+                    )
                 : col.key === 'checkInDate' || col.key === 'checkOutDate'
                   ? (value: string) => formatDate(value)
-                  : (value: string) => <TruncateTooltipCell value={value} />,
+                  : undefined,
       onCell:
         col.key === 'reservationId'
-          ? (record: any) => record.isChild ? { className: 'nesting-cell-child' } : {}
+          ? () => ({ style: { paddingLeft: 8, paddingRight: 8 } })
+          : undefined,
+      onHeaderCell:
+        col.key === 'reservationId'
+          ? () => ({ style: { paddingLeft: 8, paddingRight: 8 } })
           : undefined,
     };
   });
@@ -625,34 +1201,12 @@ const BatchFolio: React.FC = () => {
                 >
                   <Button icon={<ColumnsIcon style={{ width: 24, height: 24 }} />} className="batch-folio-toolbar-btn" />
                 </Dropdown>
-                {!exportModalOpen && (
-                  <Button
-                    type="primary"
-                    icon={
-                      <ExportIcon
-                        style={{
-                          width: 18,
-                          height: 18,
-                          verticalAlign: 'middle',
-                          display: 'inline-block',
-                          marginTop: '-2px',
-                          color: selectedRowKeys.length === 0 ? 'rgba(0,0,0,0.25)' : '#fff'
-                        }}
-                      />
-                    }
-                    style={{ height: 40, fontSize: 14, lineHeight: '22px', fontWeight: 500 }}
-                    disabled={selectedRowKeys.length === 0}
-                    onClick={() => setExportModalOpen(true)}
-                  >
-                    Export{selectedRowKeys.length > 0 ? ` (${selectedRowKeys.length})` : ''}
-                  </Button>
-                )}
               </div>
             </div>
             <div className="table-wrapper">
               <Table
                 columns={columnsWithNesting}
-                dataSource={paginatedRows}
+                dataSource={pagedData}
                 rowKey="key"
                 rowSelection={{
                   type: 'checkbox',
@@ -660,12 +1214,26 @@ const BatchFolio: React.FC = () => {
                   selectedRowKeys,
                   onChange: (selectedKeys: React.Key[]) => setSelectedRowKeys(selectedKeys),
                 }}
-                scroll={{ x: 'max-content', y: 400 }}
+                scroll={{ x: 1350, y: 400 }}
                 pagination={false}
                 style={{ marginTop: 24 }}
                 expandable={{ showExpandColumn: false, expandedRowRender: undefined }}
                 childrenColumnName={undefined}
                 rowClassName={record => record.isParent ? 'nesting-row-parent' : record.isChild ? 'nesting-row-child' : ''}
+                onChange={(pagination, filters, sorterArg) => {
+                  let columnKey: string | undefined;
+                  let order: 'ascend' | 'descend' | undefined;
+                  if (Array.isArray(sorterArg)) {
+                    const s = sorterArg[0] || {};
+                    columnKey = s.columnKey ? String(s.columnKey) : undefined;
+                    order = s.order === 'ascend' || s.order === 'descend' ? s.order : undefined;
+                  } else {
+                    columnKey = sorterArg && sorterArg.columnKey ? String(sorterArg.columnKey) : undefined;
+                    order = sorterArg && (sorterArg.order === 'ascend' || sorterArg.order === 'descend') ? sorterArg.order : undefined;
+                  }
+                  setSorter({ columnKey, order });
+                  setCurrent(1);
+                }}
               />
             </div>
             <div className="batch-folio-pagination-bar">
@@ -688,7 +1256,7 @@ const BatchFolio: React.FC = () => {
                     setCurrent(1);
                   }}
                   options={pageSizeOptions.map(size => ({ value: size, label: `${size} / page` }))}
-                  style={{ width: 100 }}
+                  style={{ width: 100, height: 40 }}
                 />
               </div>
             </div>
@@ -740,6 +1308,7 @@ const BatchFolio: React.FC = () => {
                     onChange={val => setPendingFilters(f => ({ ...f, reservationStatus: val }))}
                     options={RESERVATION_STATUSES.map(s => ({ value: s.value, label: s.label }))}
                     placeholder="Select reservation status"
+                    style={{ height: 40 }}
                   />
                 </Form.Item>
                 <Form.Item label="Buildings">
@@ -748,6 +1317,7 @@ const BatchFolio: React.FC = () => {
                     onChange={val => setPendingFilters(f => ({ ...f, buildings: val }))}
                     options={BUILDINGS.map(b => ({ value: b, label: b }))}
                     placeholder="Select buildings"
+                    style={{ height: 40 }}
                   />
                 </Form.Item>
                 <Form.Item label="Floors">
@@ -756,6 +1326,7 @@ const BatchFolio: React.FC = () => {
                     onChange={val => setPendingFilters(f => ({ ...f, floors: val }))}
                     options={FLOORS.map(f => ({ value: f, label: f }))}
                     placeholder="Select floors"
+                    style={{ height: 40 }}
                   />
                 </Form.Item>
                 <Form.Item label="Business Sources">
@@ -764,6 +1335,7 @@ const BatchFolio: React.FC = () => {
                     onChange={val => setPendingFilters(f => ({ ...f, businessSources: val }))}
                     options={BUSINESS_SOURCES.map(s => ({ value: s, label: s }))}
                     placeholder="Select business sources"
+                    style={{ height: 40 }}
                   />
                 </Form.Item>
                 <Form.Item label="Room Types">
@@ -772,6 +1344,7 @@ const BatchFolio: React.FC = () => {
                     onChange={val => setPendingFilters(f => ({ ...f, roomTypes: val }))}
                     options={getFullRoomTypes(finalData).map(rt => ({ value: rt, label: rt }))}
                     placeholder="Select room types"
+                    style={{ height: 40 }}
                   />
                 </Form.Item>
               </Form>
@@ -779,63 +1352,6 @@ const BatchFolio: React.FC = () => {
           </div>
         </div>
       </div>
-      <Modal
-        title={null}
-        open={exportModalOpen}
-        onCancel={() => setExportModalOpen(false)}
-        onOk={() => {
-          setShowExportAlert(true);
-          const selectedDocs = Object.entries(exportOptions)
-            .filter(([_, checked]) => checked)
-            .map(([name]) => {
-              if (name === 'folio') return 'Folio';
-              if (name === 'detailedFolio') return 'Detailed Folio';
-              if (name === 'registrationForm') return 'Registration Form';
-              return name;
-            });
-          setExportedDocs(selectedDocs);
-          setExportModalOpen(false);
-        }}
-        okText="Yes, Export"
-        cancelText="No, Cancel"
-        centered
-        okButtonProps={{
-          disabled: !exportOptions.folio && !exportOptions.detailedFolio && !exportOptions.registrationForm
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0 }}>
-            <InfoIcon style={{ width: 24, height: 24, color: '#3E4BE0' }} />
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#222' }}>Export documents?</span>
-          </div>
-          <div style={{ fontSize: 14, fontWeight: 400, color: '#222', textAlign: 'left', marginBottom: 8, paddingLeft: 32 }}>
-            Proceeding will export the following documents as selected. The export process may take a few moments depending on the number and size of documents selected.
-          </div>
-          <div className="export-modal-checkbox-group" style={{ paddingTop: 0, paddingBottom: 0, paddingLeft: 32 }}>
-            <Checkbox
-              checked={exportOptions.folio}
-              onChange={e => setExportOptions(opts => ({ ...opts, folio: e.target.checked }))}
-              style={{ fontSize: 14 }}
-            >Folio</Checkbox>
-            <Checkbox
-              checked={exportOptions.detailedFolio}
-              onChange={e => setExportOptions(opts => ({ ...opts, detailedFolio: e.target.checked }))}
-              style={{ fontSize: 14 }}
-            >Detailed Folio</Checkbox>
-            <Checkbox
-              checked={exportOptions.registrationForm}
-              onChange={e => setExportOptions(opts => ({ ...opts, registrationForm: e.target.checked }))}
-              style={{ fontSize: 14 }}
-            >Registration Form</Checkbox>
-          </div>
-        </div>
-      </Modal>
-      {showExportAlert && (
-        <ExportSuccessAlert
-          folioNames={exportedDocs.join(', ')}
-          onClose={() => setShowExportAlert(false)}
-        />
-      )}
     </div>
   );
 };
