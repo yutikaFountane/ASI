@@ -327,9 +327,37 @@ html, body, * {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  width: 100%;
-  margin-bottom: 32px !important; /* Increased space below table */
-  overflow: hidden;
+  /* Ensure the table fills the vertical space */
+}
+
+.table-wrapper .ant-table-wrapper {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.table-wrapper .ant-table {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.table-wrapper .ant-table-container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.table-wrapper .ant-table-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 .ant-table-selection-column,
