@@ -1,6 +1,5 @@
 import React from 'react';
 import { Select } from 'antd';
-import './ResponsiveMultiSelect.css';
 
 interface ResponsiveMultiSelectProps {
   value: string[];
@@ -19,29 +18,20 @@ const ResponsiveMultiSelect: React.FC<ResponsiveMultiSelectProps> = ({
 }) => {
   const maxTagCount = 2;
   return (
-    <div style={{ width: '100%' }} className="responsive-multiselect-container">
-      <Select
-        mode="multiple"
-        value={value}
-        onChange={onChange}
-        options={options}
-        style={{ width: '100%', ...style }}
-        placeholder={placeholder}
-        maxTagCount={maxTagCount}
-        maxTagPlaceholder={omittedValues => (
-          <span style={{
-            background: '#ededed',
-            borderRadius: 8,
-            padding: '0 12px',
-            fontWeight: 500,
-            color: '#444'
-          }}>
-            +{omittedValues.length}
-          </span>
-        )}
-        className="responsive-multiselect"
-      />
-    </div>
+    <Select
+      mode="multiple"
+      value={value}
+      onChange={onChange}
+      options={options}
+      style={style}
+      placeholder={placeholder}
+      maxTagCount={maxTagCount}
+      maxTagPlaceholder={omittedValues => (
+        <span>
+          +{omittedValues.length}
+        </span>
+      )}
+    />
   );
 };
 

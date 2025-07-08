@@ -1,22 +1,49 @@
 /* ResponsiveMultiSelect.css */
+/*
 .responsive-multiselect .ant-select-selector {
   min-height: 40px !important;
   max-height: 40px !important;
   height: 40px !important;
-  overflow-y: hidden !important;
   display: flex !important;
   align-items: center !important;
-  flex-wrap: nowrap !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+  justify-content: flex-start !important;
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+  line-height: 40px !important;
 }
 .responsive-multiselect .ant-select-selection-overflow {
   flex-wrap: nowrap !important;
   overflow: hidden !important;
 }
+.responsive-multiselect .ant-select-selection-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
 .responsive-multiselect .ant-select-selection-item {
-  max-width: 90px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.responsive-multiselect .ant-select-selection-search-input {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  line-height: normal !important;
+  padding-left: 8px;
+}
+.responsive-multiselect .ant-select-arrow {
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  margin: 0 !important;
 } 
+*/ 

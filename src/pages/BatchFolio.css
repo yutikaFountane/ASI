@@ -25,15 +25,49 @@ html, body, * {
   gap: 16px;
 }
 
+.batch-folio-toolbar-btn,
+.ant-dropdown-button {
+  margin-left: 0 !important;
+}
+
+.batch-folio-toolbar-actions > *:not(:first-child) {
+  margin-left: 0 !important;
+}
+
+/* Fix AntD Dropdown.Button group overlap */
+.ant-dropdown-button {
+  box-shadow: none !important;
+}
+
+.ant-dropdown-button + .ant-dropdown-button,
+.ant-dropdown-button + .batch-folio-toolbar-btn,
+.batch-folio-toolbar-btn + .ant-dropdown-button {
+  margin-left: 16px !important;
+}
+
+/* Force a 16px gap between the two Dropdown.Buttons in the toolbar */
+.batch-folio-toolbar-actions > .ant-dropdown-button + .ant-dropdown-button {
+  margin-left: 16px !important;
+}
+
 .batch-folio-toolbar-btn {
   width: 40px !important;
-  height: 40px !important;
   min-width: 40px !important;
+  height: 40px !important;
   min-height: 40px !important;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Allow Print dropdown button to expand for its label */
+.print-dropdown-btn {
+  width: auto !important;
+  min-width: 40px !important;
+  padding: 0 16px !important;
+  font-size: 16px !important;
 }
 
 .batch-folio-toolbar-btn .anticon {
@@ -43,6 +77,16 @@ html, body, * {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.print-dropdown-btn .anticon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 16px !important;
+  display: flex;
+  align-items: center;
+  color: rgba(0, 0, 0, 0.25) !important;
 }
 
 .batch-folio-toolbar .ant-input-wrapper,
@@ -661,4 +705,363 @@ table .ant-table-cell.nesting-cell-child {
   border-radius: 8px !important;
   box-shadow: none !important;
   background: #fff;
+} 
+
+/* Ensure DatePicker.RangePicker in the filter drawer is 40px high */
+.ant-drawer .ant-picker,
+.ant-drawer .ant-picker-range {
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.ant-drawer .ant-picker-input > input {
+  height: 40px !important;
+  line-height: 40px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  display: flex;
+  align-items: center;
+} 
+
+/* Perfectly middle-align text and dropdown icon in Ant Design select fields */
+.ant-select-selector {
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  box-sizing: border-box !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Vertically center the Ant Design select dropdown icon in select fields */
+.ant-select-arrow {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: 12px !important;
+  margin-top: 0 !important;
+  position: absolute !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 16px !important;
+}
+
+.ant-select-selection-placeholder,
+.ant-select-selection-item {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  line-height: 40px !important;
+} 
+
+/* Enhanced: Force vertical centering for Ant Design Select fields and dropdown icon */
+.ant-select-selector {
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  box-sizing: border-box !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.ant-select-selection-placeholder,
+.ant-select-selection-item {
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  padding: 0 !important;
+}
+
+.ant-select-arrow {
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: 12px !important;
+  margin-top: 0 !important;
+  position: absolute !important;
+  pointer-events: none;
+}
+
+.ant-select-single .ant-select-selector .ant-select-selection-search-input {
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 !important;
+} 
+
+/* Strong vertical centering for Ant Design Select, including overflow and search input */
+.ant-select,
+.ant-select-single,
+.ant-select-selector,
+.ant-select-selection-item,
+.ant-select-selection-placeholder,
+.ant-select-arrow,
+.ant-select-selection-overflow-item,
+.ant-select-selection-overflow-item-suffix,
+.ant-select-selection-search,
+.ant-select-selection-search-input {
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  line-height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.ant-select-arrow {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none;
+  display: flex !important;
+  align-items: center !important;
+  height: 24px !important;
+}
+
+.ant-select-selection-item,
+.ant-select-selection-placeholder {
+  width: 100%;
+  justify-content: flex-start !important;
+  font-size: 16px !important;
+  color: #bfbfbf;
+}
+
+.ant-select-selection-search-input {
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  line-height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+} 
+
+/* Hide the dropdown arrow for the Print dropdown menu */
+.print-dropdown-btn + .ant-dropdown .ant-dropdown-arrow {
+  display: none !important;
+} 
+
+/* Globally hide the Ant Design dropdown arrow for all dropdown menus in BatchFolio */
+.ant-dropdown .ant-dropdown-arrow {
+  display: none !important;
+} 
+
+/* Reduce the gap between the dropdown button and its menu to 4px */
+.ant-dropdown .ant-dropdown-menu {
+  margin-top: 4px !important;
+} 
+
+/* Force the dropdown menu to be only 4px away from the dropdown button */
+.ant-dropdown .ant-dropdown-menu,
+.ant-dropdown .ant-dropdown-menu-root,
+.ant-dropdown .ant-dropdown-placement-bottomRight {
+  margin-top: 4px !important;
+  top: 4px !important;
+} 
+
+/* Force the dropdown menu popup to be exactly 4px below the dropdown button, even if AntD uses inline styles */
+.ant-dropdown .ant-dropdown-menu,
+.ant-dropdown .ant-dropdown-menu-root,
+.ant-dropdown .ant-dropdown-placement-bottomRight,
+.ant-dropdown[style*='top'] {
+  margin-top: 4px !important;
+  top: 4px !important;
+}
+
+.ant-dropdown[style*='top'] {
+  top: 4px !important;
+} 
+
+/* Move the dropdown menu 10px higher than its current position */
+.ant-dropdown .ant-dropdown-menu {
+  transform: translateY(-10px) !important;
+} 
+
+/* Perfectly align the select dropdown icon with the select field text */
+.ant-select-arrow {
+  height: 40px !important;
+  line-height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  right: 12px !important;
+  margin: 0 !important;
+  position: absolute !important;
+  transform: none !important;
+} 
+
+/* Remove extra left space from the select field text box */
+.ant-select-selector {
+  padding-left: 16px !important;
+} 
+
+/* Remove extra space from select fields caused by the overflow item suffix */
+.ant-select-selection-overflow-item-suffix {
+  width: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+} 
+
+/* Left-align the text within the select field overflow container */
+.ant-select-selection-overflow {
+  text-align: left !important;
+  justify-content: flex-start !important;
+} 
+
+/* Remove margin from the select search input container */
+.ant-select-selection-search {
+  margin: 0 !important;
+} 
+
+/* Set left padding of Select fields in the filter drawer to 11px */
+.ant-drawer .ant-select-selector {
+  padding-left: 11px !important;
+} 
+
+/* Reduce font size of filter drawer form labels to 14px */
+.ant-drawer .ant-form-item-label > label {
+  font-size: 14px !important;
+} 
+
+/* Set font size of placeholder and selected items in filter drawer Select dropdowns to 14px */
+.ant-drawer .ant-select-selection-placeholder,
+.ant-drawer .ant-select-selection-item {
+  font-size: 14px !important;
+} 
+
+/* Fix select field input overflow: ensure input text stays inside the select field */
+.ant-select-selector,
+.ant-select-selection-search-input {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+} 
+
+/* Left-align placeholder text in select fields in the filter drawer */
+.ant-drawer .ant-select-selection-placeholder {
+  text-align: left !important;
+  justify-content: flex-start !important;
+} 
+
+/* Only left-align placeholder text in select fields when no chips are present */
+.ant-drawer .ant-select-selection-overflow:not(:has(.ant-select-selection-item)) .ant-select-selection-placeholder {
+  text-align: left !important;
+  justify-content: flex-start !important;
+} 
+
+/* Add a 4px gap around multi-select chips in the filter drawer select fields */
+.ant-drawer .ant-select-selection-item {
+  margin: 4px !important;
+} 
+
+/* Fix multi-select chip gap: make chips inline and auto width so margin is visible */
+.ant-drawer .ant-select-selection-item {
+  margin: 4px !important;
+  width: auto !important;
+  display: inline-flex !important;
+} 
+
+/* Force multi-select chips in the filter drawer to be 32px tall with 4px top/bottom padding, overriding all 40px rules */
+.ant-drawer .ant-select-selection-item {
+  margin: 4px !important;
+  width: auto !important;
+  display: inline-flex !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  align-items: center !important;
+  line-height: 24px !important;
+} 
+
+/* Use gap for chip spacing instead of margin to avoid double padding */
+.ant-drawer .ant-select-selection-overflow {
+  gap: 4px !important;
+}
+.ant-drawer .ant-select-selection-item {
+  margin: 0 !important;
+  width: auto !important;
+  display: inline-flex !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  align-items: center !important;
+  line-height: 24px !important;
+  color: rgba(0, 0, 0, 0.88) !important;
+} 
+
+/* Flex only the header cell of the selection (checkbox) column */
+.ant-table-thead > tr > th.ant-table-selection-column {
+  flex: 1 1 100px;
+  width: auto !important;
+  min-width: 56px;
+  max-width: 200px;
+}
+
+/* Optionally, if you use a custom table class, you can scope it: */
+/*
+.batch-folio-table .ant-table-thead > tr > th.ant-table-selection-column {
+  flex: 1 1 100px;
+  width: auto !important;
+  min-width: 56px;
+  max-width: 200px;
+}
+*/ 
+
+.per-page-selector-compact .ant-select-selector {
+  height: 30px !important;
+  min-height: 30px !important;
+  min-width: 110px !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: rgba(0,0,0,0.65) !important;
+}
+
+.per-page-selector-compact .ant-select-selection-item {
+  color: rgba(0,0,0,0.65) !important;
+  font-size: 14px !important;
+}
+
+.per-page-selector-compact .ant-select-item {
+  font-size: 14px !important;
+} 
+
+.per-page-selector-compact .ant-select-selection-search {
+  width: 100% !important;
+  min-width: 0 !important;
+} 
+
+.ant-drawer .ant-form-vertical .ant-form-item {
+  margin-bottom: 16px !important;
+  margin-top: 16px !important;
+}
+.ant-drawer .ant-form-vertical .ant-form-item:first-child {
+  margin-top: 0 !important;
 } 

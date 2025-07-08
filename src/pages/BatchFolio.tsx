@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import './BatchFolio.css';
 import Sidebar from '../components/Sidebar';
 import HeaderBar from '../components/HeaderBar';
@@ -23,7 +23,12 @@ import dayjs from 'dayjs';
 import update from 'immutability-helper';
 import ResponsiveMultiSelect from '../components/ResponsiveMultiSelect';
 import { Menu } from 'antd';
+import FolioImg from '../assets/Images/Folio.png';
+import DetailedFolioImg from '../assets/Images/Detailed folio.png';
+import RegistrationFormImg from '../assets/Images/Registration Form.png';
 
+const BUILDINGS = ['Building A', 'Building B', 'Building C'];
+const FLOORS = ['Floor 1', 'Floor 2', 'Floor 3'];
 const roomTypes = ['Deluxe', 'Suite', 'Standard', 'Executive', 'Superior'];
 const roomTypeShortMap: Record<string, string> = {
   'Deluxe': 'DLX',
@@ -273,6 +278,25 @@ for (let i = 0; i < 10; i++) {
   });
 }
 
+function assignBuildingFloorRoomType(row: any, idx: number) {
+  // Extract roomType from room string if present
+  let roomType = undefined;
+  if (row.room) {
+    const match = row.room.match(/\(([^)]+)\)/);
+    if (match) {
+      const short = match[1];
+      roomType = Object.keys(roomTypeShortMap).find(key => roomTypeShortMap[key] === short) || short;
+    }
+  }
+  return {
+    ...row,
+    building: row.building || BUILDINGS[idx % BUILDINGS.length],
+    floor: row.floor || FLOORS[idx % FLOORS.length],
+    roomType: row.roomType || roomType,
+  };
+}
+
+// Now define allDataNested, uniqueData, etc.
 const allDataNested: Record<string, any>[] = [
   ...demoStatusRows,
   ...generateData(5),
@@ -500,7 +524,173 @@ const allDataNested: Record<string, any>[] = [
     balance: 0,
   },
   ...generateData(30).map(item => ({ ...item, key: `g${item.key}` })),
+  // Add demo 'Individual (Linked to group)' rows
+  {
+    key: 'linked-1',
+    reservationId: formatReservationId(80001),
+    pocFullName: 'John Doe',
+    checkInDate: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(5, 'day').format('YYYY-MM-DD'),
+    room: '305 (DLX)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1100,
+    balance: 100,
+    groupName: 'Standard Group',
+  },
+  {
+    key: 'linked-2',
+    reservationId: formatReservationId(80002),
+    pocFullName: 'Jane Smith',
+    checkInDate: dayjs().add(4, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(6, 'day').format('YYYY-MM-DD'),
+    room: '306 (STD)',
+    cancellationPolicy: 'Non-refundable',
+    businessSource: 'Expedia',
+    totalCharges: 1200,
+    balance: 200,
+    groupName: 'Deluxe Group',
+  },
+  {
+    key: 'linked-3',
+    reservationId: formatReservationId(80003),
+    pocFullName: 'Alex Lee',
+    checkInDate: dayjs().add(5, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(7, 'day').format('YYYY-MM-DD'),
+    room: '307 (STE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Agoda',
+    totalCharges: 1300,
+    balance: 300,
+    groupName: 'Suite Group',
+  },
+  // Add more demo 'Individual (Linked to group)' rows, some with Pending Revenue icon
+  {
+    key: 'linked-4',
+    reservationId: formatReservationId(80004),
+    pocFullName: 'Priya Patel',
+    checkInDate: dayjs().add(6, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(8, 'day').format('YYYY-MM-DD'),
+    room: '308 (DLX)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1400,
+    balance: 0,
+    groupName: 'Standard Group',
+  },
+  {
+    key: 'linked-5',
+    reservationId: formatReservationId(80005),
+    pocFullName: 'Carlos Gomez',
+    checkInDate: dayjs().add(7, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(9, 'day').format('YYYY-MM-DD'),
+    room: '309 (STD)',
+    cancellationPolicy: 'Non-refundable',
+    businessSource: 'Expedia',
+    totalCharges: 1500,
+    balance: 200, // Will show Pending Revenue icon
+    groupName: 'Deluxe Group',
+    reservationStatus: 'Checked-Out',
+  },
+  {
+    key: 'linked-6',
+    reservationId: formatReservationId(80006),
+    pocFullName: 'Emily Chen',
+    checkInDate: dayjs().add(8, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(10, 'day').format('YYYY-MM-DD'),
+    room: '310 (STE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Agoda',
+    totalCharges: 1600,
+    balance: 300, // Will show Pending Revenue icon
+    groupName: 'Suite Group',
+    reservationStatus: 'In-House',
+  },
+  // Add more demo 'Individual (Linked to group)' rows for in-house guests
+  {
+    key: 'linked-7',
+    reservationId: formatReservationId(80007),
+    pocFullName: 'Sara Ahmed',
+    checkInDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(2, 'day').format('YYYY-MM-DD'),
+    room: '311 (DLX)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1700,
+    balance: 120, // Will show Pending Revenue icon
+    groupName: 'Standard Group',
+    reservationStatus: 'In-House',
+  },
+  {
+    key: 'linked-8',
+    reservationId: formatReservationId(80008),
+    pocFullName: 'Liam O\'Brien',
+    checkInDate: dayjs().subtract(2, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+    room: '312 (STD)',
+    cancellationPolicy: 'Non-refundable',
+    businessSource: 'Expedia',
+    totalCharges: 1800,
+    balance: 250, // Will show Pending Revenue icon
+    groupName: 'Deluxe Group',
+    reservationStatus: 'In-House',
+  },
+  {
+    key: 'linked-9',
+    reservationId: formatReservationId(80009),
+    pocFullName: 'Mina Park',
+    checkInDate: dayjs().subtract(3, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+    room: '313 (STE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Agoda',
+    totalCharges: 1900,
+    balance: 300, // Will show Pending Revenue icon
+    groupName: 'Suite Group',
+    reservationStatus: 'In-House',
+  },
+  // Add demo 'Individual (Linked to group)' rows with long group names for truncation testing
+  {
+    key: 'linked-long-1',
+    reservationId: formatReservationId(80010),
+    pocFullName: 'Long Group Name 1',
+    checkInDate: dayjs().add(9, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(11, 'day').format('YYYY-MM-DD'),
+    room: '314 (DLX)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 2000,
+    balance: 0,
+    groupName: 'The International Association of Very Distinguished and Exceptionally Long Group Names',
+  },
+  {
+    key: 'linked-long-2',
+    reservationId: formatReservationId(80011),
+    pocFullName: 'Long Group Name 2',
+    checkInDate: dayjs().add(10, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(12, 'day').format('YYYY-MM-DD'),
+    room: '315 (STD)',
+    cancellationPolicy: 'Non-refundable',
+    businessSource: 'Expedia',
+    totalCharges: 2100,
+    balance: 0,
+    groupName: 'Annual Conference of the Society for the Promotion of Extremely Verbose Group Titles',
+  },
 ];
+const uniqueData: Record<string, any>[] = [];
+const seenReservationIds = new Set();
+const allowedBusinessSources = new Set(businessSources);
+allDataNested.forEach((row, idx) => {
+  let processedRow = assignBuildingFloorRoomType(row, idx);
+  if (!allowedBusinessSources.has(processedRow.businessSource)) {
+    processedRow.businessSource = businessSources[0];
+  }
+  if (!seenReservationIds.has(processedRow.reservationId)) {
+    uniqueData.push(processedRow);
+    seenReservationIds.add(processedRow.reservationId);
+  }
+});
+// Use uniqueData instead of allDataNested for table and filtering
 
 function flattenData(data: any[]): any[] {
   const result: any[] = [];
@@ -516,7 +706,7 @@ function flattenData(data: any[]): any[] {
   return result;
 }
 
-const flatAllData = flattenData(allDataNested);
+const flatAllData = flattenData(uniqueData);
 
 const pageSizeOptions = [5, 10, 20, 30, 50];
 
@@ -594,8 +784,7 @@ const RESERVATION_STATUSES = [
   { value: 'In-House', label: 'In-House', color: '#E6F8FA', borderColor: '#B6E9F5', textColor: '#22607B', icon: <span style={{marginRight: 8}}>🏠</span> },
 ];
 const BUSINESS_SOURCES = ['ASI WebRes', 'Walk-In', 'Mobile', 'Google Hotel Booking', 'Expedia', 'Hotels.com', 'Hotwire', 'SynXis Web', 'Booking.com', 'Travelocity (GHE)', 'Agoda', 'Ctrip', 'Travlu'];
-const BUILDINGS = ['Building A', 'Building B', 'Building C'];
-const FLOORS = ['Floor 1', 'Floor 2', 'Floor 3'];
+
 
 // Helper to get unique room types from data
 const getRoomTypes = (data: any[]) => Array.from(new Set(data.map(d => d.roomType)));
@@ -702,11 +891,11 @@ const CUSTOMIZABLE_COLUMNS = [
   { key: 'checkInDate', label: 'Check-In Date' },
   { key: 'checkOutDate', label: 'Check-Out Date' },
   { key: 'room', label: 'Rooms/Spaces' },
+  { key: 'reservationStatus', label: 'Status' },
   { key: 'cancellationPolicy', label: 'Cancellation Policy' },
   { key: 'businessSource', label: 'Business Source' },
   { key: 'totalCharges', label: 'Total Charges ($)' },
   { key: 'balance', label: 'Balance ($)' },
-  { key: 'reservationStatus', label: 'Status' },
 ];
 
 // Helper to get today's date in YYYY-MM-DD format
@@ -732,6 +921,63 @@ function computeStatus(row: any, today: dayjs.Dayjs): string {
 }
 const todayDayjs = dayjs(todayString);
 
+// Add this above BatchFolio
+const POCCellWithTooltip: React.FC<{ displayName: string; email: string }> = ({ displayName, email }) => {
+  const nameRef = React.useRef<HTMLSpanElement>(null);
+  const emailRef = React.useRef<HTMLSpanElement>(null);
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  React.useEffect(() => {
+    if (nameRef.current && emailRef.current) {
+      const nameTruncated = nameRef.current.scrollWidth > nameRef.current.clientWidth;
+      const emailTruncated = emailRef.current.scrollWidth > emailRef.current.clientWidth;
+      setShowTooltip(nameTruncated || emailTruncated);
+    }
+  }, [displayName, email]);
+  const content = (
+    <>
+      <span ref={nameRef} style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', display: 'block' }}>{displayName}</span>
+      <span ref={emailRef} style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', display: 'block' }}>{email}</span>
+    </>
+  );
+  return showTooltip ? (
+    <Tooltip title={<span>{displayName}<br />{email}</span>} placement="top" overlayInnerStyle={{ maxWidth: 300 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>{content}</div>
+    </Tooltip>
+  ) : (
+    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>{content}</div>
+  );
+};
+
+// Add this above BatchFolio
+const GroupInfoWithTooltip: React.FC<{ groupName: string }> = ({ groupName }) => {
+  const spanRef = React.useRef<HTMLSpanElement>(null);
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  React.useEffect(() => {
+    if (spanRef.current) {
+      setShowTooltip(spanRef.current.scrollWidth > spanRef.current.clientWidth);
+    }
+  }, [groupName]);
+  const display = `Indiv. Res | Group: ${groupName || 'N/A'}`;
+  const tooltip = `Individual Reservation | Group: ${groupName || 'N/A'}`;
+  const span = (
+    <span
+      ref={spanRef}
+      style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%', maxWidth: '100%', display: 'block' }}
+    >
+      {display}
+    </span>
+  );
+  return showTooltip ? (
+    <div style={{ width: '100%', maxWidth: '100%', minWidth: 0 }}>
+      <Tooltip title={tooltip} placement="top">
+        {span}
+      </Tooltip>
+    </div>
+  ) : (
+    <div style={{ width: '100%', maxWidth: '100%', minWidth: 0 }}>{span}</div>
+  );
+};
+
 const BatchFolio: React.FC = () => {
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -745,6 +991,7 @@ const BatchFolio: React.FC = () => {
     floors: [] as string[],
     businessSources: [] as string[],
     roomTypes: [] as string[],
+    groups: [] as string[],
   });
   const [pendingFilters, setPendingFilters] = useState(filters);
   const [customColumns, setCustomColumns] = useState(
@@ -752,6 +999,12 @@ const BatchFolio: React.FC = () => {
   );
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [sorter, setSorter] = useState<{ columnKey?: string; order?: 'ascend' | 'descend' }>({});
+  const [selectedPrinter, setSelectedPrinter] = useState<string | null>(null);
+  const printerOptions = [
+    { value: 'printer1', label: 'Office Printer 1' },
+    { value: 'printer2', label: 'Office Printer 2' },
+    { value: 'printer3', label: 'PDF Printer' },
+  ];
 
   // Helper to extract the numeric part of reservationId for sorting
   const extractReservationNumber = (reservationId: string) => {
@@ -791,6 +1044,9 @@ const BatchFolio: React.FC = () => {
       if (filters.floors.length && !filters.floors.includes(row.floor)) return false;
       if (filters.businessSources.length && !filters.businessSources.includes(row.businessSource)) return false;
       if (filters.roomTypes.length && !filters.roomTypes.includes(row.roomType)) return false;
+      if (filters.groups.length) {
+        if (!(filters.groups.includes(row.groupName) || (row.isParent && filters.groups.includes(row.pocFullName)))) return false;
+      }
       return true;
     });
 
@@ -853,39 +1109,23 @@ const BatchFolio: React.FC = () => {
 
   const finalData = getSortedData();
   const pagedDataRaw = finalData.slice((current - 1) * pageSize, current * pageSize);
-
-  // Ensure at least one group (multi-room) and one space reservation per page
   let pagedData = [...pagedDataRaw];
-  const hasGroup = pagedData.some(row => row.isParent);
-  const hasSpace = pagedData.some(row => row.space);
-  if (!hasGroup) {
-    // Find a group reservation from allDataNested
-    const group = allDataNested.find(row => row.children && row.children.length > 0);
-    if (group && !pagedData.find(row => row.key === group.key)) {
-      pagedData[pagedData.length - 1] = { ...group, isParent: true, isChild: false };
-    }
-  }
-  if (!hasSpace) {
-    // Find a space reservation from allDataNested
-    const space = allDataNested.find(row => row.space);
-    if (space && !pagedData.find(row => row.key === space.key)) {
-      pagedData[0] = { ...space, isParent: false, isChild: false };
-    }
-  }
 
-  const handleClearAll = () => setPendingFilters({
-    dateRange: null,
-    reservationStatus: [],
-    buildings: [],
-    floors: [],
-    businessSources: [],
-    roomTypes: [],
-  });
-  const handleCancel = () => setFilterDrawerOpen(false);
-  const handleShowResults = () => {
-    setFilters(pendingFilters);
-    setFilterDrawerOpen(false);
+  const handleClearAll = () => {
+    const defaultFilters = {
+      dateRange: null,
+      reservationStatus: [],
+      buildings: [],
+      floors: [],
+      businessSources: [],
+      roomTypes: [],
+      groups: [],
+    };
+    setPendingFilters(defaultFilters);
+    setFilters(defaultFilters);
+    // setFilterDrawerOpen(false); // Do not close the drawer on clear all
   };
+  const handleCancel = () => setFilterDrawerOpen(false);
 
   // Filtering logic
   const filteredData = finalData.filter(row => {
@@ -908,6 +1148,9 @@ const BatchFolio: React.FC = () => {
     if (filters.businessSources.length && !filters.businessSources.includes(row.businessSource)) return false;
     // Room Types
     if (filters.roomTypes.length && !filters.roomTypes.includes(row.roomType)) return false;
+    if (filters.groups.length) {
+      if (!(filters.groups.includes(row.groupName) || (row.isParent && filters.groups.includes(row.pocFullName)))) return false;
+    }
     return true;
   });
 
@@ -996,8 +1239,6 @@ const BatchFolio: React.FC = () => {
         col.key === 'reservationId'
           ? (text: string, record: any) => {
               const computedStatus = computeStatus(record, todayDayjs);
-              // Make the flag much rarer: only for 2-3 rows per page
-              // Show if (record.key or reservationId) modulo 13 is 0 or 7, in addition to the existing checks
               let keyNum = 0;
               if (typeof record.key === 'number') keyNum = record.key;
               else if (typeof record.key === 'string') {
@@ -1011,14 +1252,47 @@ const BatchFolio: React.FC = () => {
               }
               const rareFlag = (keyNum % 13 === 0 || keyNum % 13 === 7 || resIdNum % 13 === 0 || resIdNum % 13 === 7);
               const showFlag = record.balance > 0 && (computedStatus === 'Checked-Out' || computedStatus === 'In-House') && rareFlag;
-              // Only one kind of cell: reservation ID and (optionally) flag icon
+              // Show group info only for 'Individual (Linked to group)' cells
+              const showGroupInfo = !record.isParent && record.groupName;
+              let groupName = '';
+              if (record.groupName) {
+                groupName = record.groupName;
+              }
               return (
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                  <span>{text}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', minHeight: 0, overflow: 'hidden', width: '100%' }}>
+                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', width: '100%', height: '100%' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', height: 20 }}>{text}</span>
+                      {showGroupInfo && (
+                        <GroupInfoWithTooltip groupName={groupName} />
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        width: showFlag && record.isParent ? 44 : 14,
+                        height: '100%',
+                        padding: 0,
+                        margin: 0,
+                      }}
+                    >
+                      {/* Show both icons side by side if both are present */}
+                      {showFlag && record.isParent ? (
                   <span style={{ display: 'flex', alignItems: 'center' }}>
+                          <Tooltip title={record.pocFullName || 'Group Reservation'} placement="top">
+                            <GroupIcon style={{ width: 14, height: 14, verticalAlign: 'middle', color: 'rgba(0,0,0,0.45)', marginRight: 12 }} />
+                          </Tooltip>
+                          <Tooltip title="Pending Revenue Posting">
+                            <FlagOutlined style={{ color: '#E53E3E', fontSize: 14, verticalAlign: 'middle' }} />
+                          </Tooltip>
+                        </span>
+                      ) : (
+                        <>
                     {showFlag && (
                       <Tooltip title="Pending Revenue Posting">
-                        <FlagOutlined style={{ color: '#E53E3E', fontSize: 14, verticalAlign: 'middle', marginRight: record.isParent ? 16 : 0 }} />
+                              <FlagOutlined style={{ color: '#E53E3E', fontSize: 14, verticalAlign: 'middle' }} />
                       </Tooltip>
                     )}
                     {record.isParent && (
@@ -1026,14 +1300,38 @@ const BatchFolio: React.FC = () => {
                         <GroupIcon style={{ width: 14, height: 14, verticalAlign: 'middle', color: 'rgba(0,0,0,0.45)' }} />
                       </Tooltip>
                     )}
-                  </span>
-                </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
               );
             }
           : col.key === 'pocFullName'
             ? (value: string, record: any) => {
-                // Generate placeholder email from name
-                const email = value ? value.toLowerCase().replace(/\s+/g, '.') + '@example.com' : '';
+                // If the name contains 'Group' or a number, use a real person name from peopleNames
+                let displayName = value;
+                let email = '';
+                const isGroup = /group|\d/.test(value.toLowerCase());
+                if (isGroup) {
+                  // Pick a real person name from peopleNames based on row key or reservationId
+                  let idx = 0;
+                  if (typeof record.key === 'number') idx = record.key % peopleNames.length;
+                  else if (typeof record.key === 'string') {
+                    const match = record.key.match(/\d+/);
+                    if (match) idx = parseInt(match[0], 10) % peopleNames.length;
+                  }
+                  displayName = peopleNames[idx];
+                }
+                // Generate email from displayName
+                if (displayName) {
+                  const parts = displayName.trim().split(/\s+/);
+                  if (parts.length >= 2) {
+                    email = `${parts[0].toLowerCase()}.${parts.slice(1).join('.').toLowerCase()}@example.com`;
+                  } else {
+                    email = `${displayName.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+                  }
+                }
                 // Show Ban icon for a few rows (e.g., key or reservationId modulo 11 is 0 or 5)
                 let keyNum = 0;
                 if (typeof record.key === 'number') keyNum = record.key;
@@ -1050,14 +1348,21 @@ const BatchFolio: React.FC = () => {
                 return (
                   <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: '100%', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
                     {showBan && (
+                      <Tooltip
+                        title={
+                          <div>
+                            <strong>DNR Reason:</strong><br />
+                            <span>Placeholder reasons for do not rent guest</span>
+                          </div>
+                        }
+                        placement="top"
+                      >
                       <span style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
                         <BanIcon style={{ width: 16, height: 16, color: '#E53E3E' }} />
                       </span>
+                      </Tooltip>
                     )}
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
-                      <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</span>
-                    </div>
+                    <POCCellWithTooltip displayName={displayName} email={email} />
                   </div>
                 );
               }
@@ -1080,7 +1385,7 @@ const BatchFolio: React.FC = () => {
                 ? (value: string, record: any) => {
                     if (record.isParent && record.key) {
                       // Find the parent in allDataNested to get its children
-                      const parent = allDataNested.find((row: any) => row.key === record.key);
+                      const parent = uniqueData.find((row: any) => row.key === record.key);
                       if (parent && Array.isArray(parent.children) && parent.children.length > 0) {
                         const rooms = parent.children.map((child: any) => child.room).filter(Boolean).join(', ');
                         return <TruncateTooltipCellIfTruncated value={rooms} maxWidth={167} />;
@@ -1145,6 +1450,75 @@ const BatchFolio: React.FC = () => {
   const paginatedRows = filteredDataWithDemo.slice((current - 1) * pageSize, current * pageSize);
   const isShortPage = paginatedRows.length < pageSize;
 
+  const pendingResultsCount = useMemo(() => {
+    return finalData.filter(row => {
+      const computedStatus = computeStatus(row, todayDayjs);
+      if (pendingFilters.dateRange) {
+        const [start, end] = pendingFilters.dateRange;
+        const checkIn = dayjs(row.checkInDate);
+        if (checkIn.isBefore(start, 'day') || checkIn.isAfter(end, 'day')) return false;
+      }
+      if (pendingFilters.reservationStatus.length) {
+        if (!pendingFilters.reservationStatus.includes(computedStatus)) return false;
+      }
+      if (pendingFilters.buildings.length && !pendingFilters.buildings.includes(row.building)) return false;
+      if (pendingFilters.floors.length && !pendingFilters.floors.includes(row.floor)) return false;
+      if (pendingFilters.businessSources.length && !pendingFilters.businessSources.includes(row.businessSource)) return false;
+      if (pendingFilters.roomTypes.length && !pendingFilters.roomTypes.includes(row.roomType)) return false;
+      if (pendingFilters.groups.length) {
+        if (!(pendingFilters.groups.includes(row.groupName) || (row.isParent && pendingFilters.groups.includes(row.pocFullName)))) return false;
+      }
+      return true;
+    }).length;
+  }, [pendingFilters, finalData, todayDayjs]);
+
+  const handlePrintDropdownClick = (optionKey: string) => {
+    let imgSrc = '';
+    if (optionKey === 'Folio') {
+      imgSrc = FolioImg;
+    } else if (optionKey === 'Detailed Folio') {
+      imgSrc = DetailedFolioImg;
+    } else if (optionKey === 'Registration Form') {
+      imgSrc = RegistrationFormImg;
+    }
+    if (!imgSrc) return;
+
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print Preview</title>
+            <style>
+              body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+              img { max-width: 100vw; max-height: 100vh; }
+            </style>
+          </head>
+          <body>
+            <img src="${imgSrc}" alt="${optionKey}" />
+            <script>
+              window.onload = function() {
+                window.print();
+                window.onafterprint = function() { window.close(); };
+              };
+            <\/script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
+  // Extract all unique group names from the data
+  const allGroupNames = useMemo(() => {
+    const names = new Set<string>();
+    uniqueData.forEach(row => {
+      if (row.groupName) names.add(row.groupName);
+      if (row.isParent && row.pocFullName) names.add(row.pocFullName);
+    });
+    return Array.from(names);
+  }, [uniqueData]);
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
@@ -1187,7 +1561,7 @@ const BatchFolio: React.FC = () => {
                       )}
                     </span>
                   }
-                  className="batch-folio-toolbar-btn"
+                  className={`batch-folio-toolbar-btn${isAnyPendingFilterApplied() ? ' active-filter' : ''}`}
                   style={isAnyPendingFilterApplied() ? { border: '1px solid #3E4BE0' } : {}}
                   onClick={() => setFilterDrawerOpen(true)}
                 />
@@ -1201,6 +1575,50 @@ const BatchFolio: React.FC = () => {
                 >
                   <Button icon={<ColumnsIcon style={{ width: 24, height: 24 }} />} className="batch-folio-toolbar-btn" />
                 </Dropdown>
+                {/* New Dropdown Button to the right of Customize Columns */}
+                {selectedRowKeys.length === 0 ? (
+                  <Button className="batch-folio-toolbar-btn print-dropdown-btn" disabled>
+                    Print <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
+                  </Button>
+                ) : (
+                  <Dropdown
+                    menu={{
+                      items: [
+                        { key: 'folio', label: 'Folio', onClick: () => handlePrintDropdownClick('Folio') },
+                        { key: 'detailed-folio', label: 'Detailed Folio', onClick: () => handlePrintDropdownClick('Detailed Folio') },
+                        { key: 'registration-form', label: 'Registration Form', onClick: () => handlePrintDropdownClick('Registration Form') },
+                      ],
+                    }}
+                    placement="bottomRight"
+                    arrow
+                  >
+                    <Button className="batch-folio-toolbar-btn print-dropdown-btn">
+                      Print <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
+                    </Button>
+                  </Dropdown>
+                )}
+                {/* New Export Dropdown Button to the right of Print */}
+                {selectedRowKeys.length === 0 ? (
+                  <Button className="batch-folio-toolbar-btn print-dropdown-btn" disabled>
+                    Email <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
+                  </Button>
+                ) : (
+                  <Dropdown
+                    menu={{
+                      items: [
+                        { key: 'folio', label: 'Folio' },
+                        { key: 'detailed-folio', label: 'Detailed Folio' },
+                        { key: 'registration-form', label: 'Registration Form' },
+                      ],
+                    }}
+                    placement="bottomRight"
+                    arrow
+                  >
+                    <Button className="batch-folio-toolbar-btn print-dropdown-btn">
+                      Email <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
+                    </Button>
+                  </Dropdown>
+                )}
               </div>
             </div>
             <div className="table-wrapper">
@@ -1236,27 +1654,33 @@ const BatchFolio: React.FC = () => {
                 }}
               />
             </div>
-            <div className="batch-folio-pagination-bar">
-              <div className="pagination-total">Total {finalData.length} results</div>
-              <Pagination
-                current={current}
-                pageSize={pageSize}
-                total={finalData.length}
-                showSizeChanger={false}
-                pageSizeOptions={pageSizeOptions.map(String)}
-                onChange={handlePageChange}
-                onShowSizeChange={handlePageChange}
-                style={{ flex: 1, justifyContent: 'center', display: 'flex' }}
-              />
-              <div className="pagination-size-selector">
+            <div className="batch-folio-pagination-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 24 }}>
+              <div style={{ flex: 1, textAlign: 'left', color: 'rgba(0,0,0,0.65)', fontSize: 14 }}>
+                Total {finalData.length} results
+              </div>
+              <div style={{ flex: 2, display: 'flex', justifyContent: 'center' }}>
+                <Pagination
+                  current={current}
+                  pageSize={pageSize}
+                  total={finalData.length}
+                  showSizeChanger={false}
+                  pageSizeOptions={pageSizeOptions.map(String)}
+                  onChange={handlePageChange}
+                  style={{ margin: 0 }}
+                />
+              </div>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
                 <Select
+                  showSearch
                   value={pageSize}
                   onChange={size => {
                     setPageSize(size);
                     setCurrent(1);
                   }}
                   options={pageSizeOptions.map(size => ({ value: size, label: `${size} / page` }))}
-                  style={{ width: 100, height: 40 }}
+                  style={{ height: 30, color: 'rgba(0,0,0,0.65)', fontSize: 14 }}
+                  dropdownStyle={{ color: 'rgba(0,0,0,0.65)', minHeight: 30 }}
+                  className="per-page-selector-compact"
                 />
               </div>
             </div>
@@ -1285,13 +1709,15 @@ const BatchFolio: React.FC = () => {
               footer={
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, padding: '16px 24px' }}>
                   <Button type="text" onClick={handleCancel} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }}>Cancel</Button>
-                  <Button type="primary" onClick={handleShowResults} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }}>Show {filteredData.length} Results</Button>
+                  <Button type="primary" onClick={() => { setFilters(pendingFilters); setFilterDrawerOpen(false); }} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }} disabled={!isAnyPendingFilterApplied() || pendingResultsCount === 0}>
+                    Show {pendingResultsCount} Results
+                  </Button>
                 </div>
               }
               footerStyle={{ padding: 0 }}
             >
               <Form layout="vertical">
-                <Form.Item label="Date Range">
+                <Form.Item label="Check-In and Check-Out Date">
                   <DatePicker.RangePicker
                     value={pendingFilters.dateRange}
                     onChange={val => {
@@ -1302,49 +1728,100 @@ const BatchFolio: React.FC = () => {
                     style={{ width: '100%' }}
                   />
                 </Form.Item>
-                <Form.Item label="Reservation Status">
-                  <ResponsiveMultiSelect
+                <Form.Item label="Status">
+                  <Select
+                    mode="multiple"
                     value={pendingFilters.reservationStatus}
                     onChange={val => setPendingFilters(f => ({ ...f, reservationStatus: val }))}
                     options={RESERVATION_STATUSES.map(s => ({ value: s.value, label: s.label }))}
-                    placeholder="Select reservation status"
-                    style={{ height: 40 }}
+                    placeholder="Select status"
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
                   />
                 </Form.Item>
                 <Form.Item label="Buildings">
-                  <ResponsiveMultiSelect
+                  <Select
+                    mode="multiple"
                     value={pendingFilters.buildings}
                     onChange={val => setPendingFilters(f => ({ ...f, buildings: val }))}
                     options={BUILDINGS.map(b => ({ value: b, label: b }))}
                     placeholder="Select buildings"
-                    style={{ height: 40 }}
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
                   />
                 </Form.Item>
                 <Form.Item label="Floors">
-                  <ResponsiveMultiSelect
+                  <Select
+                    mode="multiple"
                     value={pendingFilters.floors}
                     onChange={val => setPendingFilters(f => ({ ...f, floors: val }))}
                     options={FLOORS.map(f => ({ value: f, label: f }))}
                     placeholder="Select floors"
-                    style={{ height: 40 }}
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
                   />
                 </Form.Item>
                 <Form.Item label="Business Sources">
-                  <ResponsiveMultiSelect
+                  <Select
+                    mode="multiple"
                     value={pendingFilters.businessSources}
                     onChange={val => setPendingFilters(f => ({ ...f, businessSources: val }))}
-                    options={BUSINESS_SOURCES.map(s => ({ value: s, label: s }))}
+                    options={businessSources.map(s => ({ value: s, label: s }))}
                     placeholder="Select business sources"
-                    style={{ height: 40 }}
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
                   />
                 </Form.Item>
                 <Form.Item label="Room Types">
-                  <ResponsiveMultiSelect
+                  <Select
+                    mode="multiple"
                     value={pendingFilters.roomTypes}
                     onChange={val => setPendingFilters(f => ({ ...f, roomTypes: val }))}
-                    options={getFullRoomTypes(finalData).map(rt => ({ value: rt, label: rt }))}
+                    options={getFullRoomTypes(uniqueData).map(rt => ({ value: rt, label: rt }))}
                     placeholder="Select room types"
-                    style={{ height: 40 }}
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
+                  />
+                </Form.Item>
+                <Form.Item label="Groups">
+                  <Select
+                    mode="multiple"
+                    value={pendingFilters.groups}
+                    onChange={val => setPendingFilters(f => ({ ...f, groups: val }))}
+                    options={allGroupNames.map(name => ({ value: name, label: name }))}
+                    placeholder="Select groups"
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
                   />
                 </Form.Item>
               </Form>
