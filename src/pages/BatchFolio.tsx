@@ -296,6 +296,46 @@ function assignBuildingFloorRoomType(row: any, idx: number) {
   };
 }
 
+// Insert negative balance demo rows at random positions in allDataNested
+const negativeBalanceRows = [
+  {
+    key: 'neg-balance-1',
+    reservationId: formatReservationId(90010),
+    pocFullName: 'Negative Balance 1',
+    checkInDate: dayjs().add(2, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(4, 'day').format('YYYY-MM-DD'),
+    room: '401 (DLX)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Direct',
+    totalCharges: 1200,
+    balance: -50,
+  },
+  {
+    key: 'neg-balance-2',
+    reservationId: formatReservationId(90011),
+    pocFullName: 'Negative Balance 2',
+    checkInDate: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(5, 'day').format('YYYY-MM-DD'),
+    room: '402 (STD)',
+    cancellationPolicy: 'Non-refundable',
+    businessSource: 'Expedia',
+    totalCharges: 900,
+    balance: -120.75,
+  },
+  {
+    key: 'neg-balance-3',
+    reservationId: formatReservationId(90012),
+    pocFullName: 'Negative Balance 3',
+    checkInDate: dayjs().add(4, 'day').format('YYYY-MM-DD'),
+    checkOutDate: dayjs().add(6, 'day').format('YYYY-MM-DD'),
+    room: '403 (STE)',
+    cancellationPolicy: 'Flexible',
+    businessSource: 'Agoda',
+    totalCharges: 1500,
+    balance: -5.5,
+  },
+];
+
 // Now define allDataNested, uniqueData, etc.
 const allDataNested: Record<string, any>[] = [
   ...demoStatusRows,
@@ -677,6 +717,12 @@ const allDataNested: Record<string, any>[] = [
     groupName: 'Annual Conference of the Society for the Promotion of Extremely Verbose Group Titles',
   },
 ];
+
+// Insert at random positions (e.g., after 5th, 15th, and 25th rows)
+allDataNested.splice(5, 0, negativeBalanceRows[0]);
+allDataNested.splice(15, 0, negativeBalanceRows[1]);
+allDataNested.splice(25, 0, negativeBalanceRows[2]);
+
 const uniqueData: Record<string, any>[] = [];
 const seenReservationIds = new Set();
 const allowedBusinessSources = new Set(businessSources);
@@ -1410,9 +1456,14 @@ const BatchFolio: React.FC = () => {
                       <span style={{ display: 'block', textAlign: 'right', width: '100%' }}>{value.toFixed(2)}</span>
                     )
                 : col.key === 'balance'
-                  ? (value: number) => (
-                      <span style={{ display: 'block', textAlign: 'right', width: '100%' }}>{value.toFixed(2)}</span>
-                    )
+                  ? (value: number) => {
+                      let color = 'rgba(0,0,0,0.88)';
+                      if (value > 0) color = '#3E4BE0';
+                      else if (value < 0) color = '#C53030';
+                      return (
+                        <span style={{ display: 'block', textAlign: 'right', width: '100%', color }}>{Math.abs(value).toFixed(2)}</span>
+                      );
+                    }
                 : col.key === 'checkInDate' || col.key === 'checkOutDate'
                   ? (value: string) => formatDate(value)
                   : undefined,
@@ -1517,6 +1568,16 @@ const BatchFolio: React.FC = () => {
       if (row.isParent && row.pocFullName) names.add(row.pocFullName);
     });
     return Array.from(names);
+  }, [uniqueData]);
+
+  // 1. Extract all unique room and space types from the data
+  const allRoomAndSpaceTypes = useMemo(() => {
+    const types = new Set<string>();
+    uniqueData.forEach(row => {
+      if (row.roomType) types.add(row.roomType);
+      if (row.spaceType) types.add(row.spaceType);
+    });
+    return Array.from(types);
   }, [uniqueData]);
 
   return (
@@ -1792,13 +1853,13 @@ const BatchFolio: React.FC = () => {
                     )}
                   />
                 </Form.Item>
-                <Form.Item label="Room Types">
+                <Form.Item label="Room/Space Type">
                   <Select
                     mode="multiple"
                     value={pendingFilters.roomTypes}
                     onChange={val => setPendingFilters(f => ({ ...f, roomTypes: val }))}
-                    options={getFullRoomTypes(uniqueData).map(rt => ({ value: rt, label: rt }))}
-                    placeholder="Select room types"
+                    options={allRoomAndSpaceTypes.map(type => ({ value: type, label: type }))}
+                    placeholder="Select room or space types"
                     style={{ width: '100%', height: 40 }}
                     maxTagCount={2}
                     maxTagPlaceholder={omittedValues => (

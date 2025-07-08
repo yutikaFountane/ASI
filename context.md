@@ -39,3 +39,39 @@ Follow these rules when you write code:
 - All reservation IDs are now consistent and use the format 'R' followed by a 6-digit number throughout all rows, including children and demo rows.
 - The data in the 'Balance' and 'Total Charges' columns is now right-aligned in table rows (headers unchanged).
 - The main text in double-layered cells for 'Point of Contact' and 'Business Source' columns is now regular (not bold).
+
+# BatchFolio UI/UX and Feature Context
+
+## Recent Improvements and Features
+
+- **Filter Drawer**
+  - Consistent 40px height for all select fields and date pickers.
+  - All dropdowns and date pickers are visually aligned and consistent.
+  - Added a "Groups" filter below Room Types, with options auto-populated from all group names in the table. Selecting groups filters both group-level and individual reservations linked to those groups.
+  - Filter logic: AND across filter types, OR within a single multi-select.
+  - "Clear All" resets filters but keeps the drawer open.
+  - Drawer field spacing: 16px gap between fields, first field flush to top.
+
+- **Table**
+  - Reservation ID column: three cell types (Individual, Individual linked to group, Group cell with icon).
+  - For "Individual (Linked to group)" rows, a second line shows "Indiv. Res | Group: [Group Name]", with tooltip only if truncated.
+  - Group and Pending Revenue icons: always 14px, side by side with 12px gap, right-aligned, no extra padding.
+  - POC cell: single tooltip for name/email if either is truncated, both shown in tooltip.
+  - Ban icon in POC cell: tooltip with bold "DNR Reason" and placeholder reason.
+
+- **Pagination and Per Page Selector**
+  - Uses Ant Design Pagination for default look/feel.
+  - Total results left, pagination centered, per page selector right.
+  - Per page selector: 30px height, 14px font, 110px min-width, 12px left/right padding, text color rgba(0,0,0,0.65), search enabled.
+  - Only one dropdown icon visible, no overlap.
+
+- **Dropdowns (Print/Email)**
+  - Dropdown options only show when enabled (at least one row selected).
+  - Disabled state renders only the button, not the dropdown.
+
+- **Other**
+  - All changes are committed and pushed to git.
+
+---
+
+This context file summarizes the current state and rationale for all major UI/UX and logic changes in BatchFolio. Update this file with any future significant changes for developer clarity.
