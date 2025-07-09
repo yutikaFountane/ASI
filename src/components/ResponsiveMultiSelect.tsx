@@ -18,20 +18,20 @@ const ResponsiveMultiSelect: React.FC<ResponsiveMultiSelectProps> = ({
 }) => {
   const maxTagCount = 2;
   return (
-    <Select
-      mode="multiple"
-      value={value}
-      onChange={onChange}
-      options={options}
+      <Select
+        mode="multiple"
+        value={value}
+        onChange={onChange}
+        options={options}
       style={style}
-      placeholder={placeholder}
-      maxTagCount={maxTagCount}
-      maxTagPlaceholder={omittedValues => (
+        placeholder={placeholder}
+        maxTagCount={maxTagCount}
+        maxTagPlaceholder={omittedValues => (
         <span>
-          +{omittedValues.length}
-        </span>
-      )}
-    />
+            +{omittedValues.length}
+          </span>
+        )}
+      />
   );
 };
 

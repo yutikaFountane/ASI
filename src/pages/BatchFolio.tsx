@@ -26,6 +26,7 @@ import { Menu } from 'antd';
 import FolioImg from '../assets/Images/Folio.png';
 import DetailedFolioImg from '../assets/Images/Detailed folio.png';
 import RegistrationFormImg from '../assets/Images/Registration Form.png';
+import ExportSuccessAlert from '../components/ExportSuccessAlert';
 
 const BUILDINGS = ['Building A', 'Building B', 'Building C'];
 const FLOORS = ['Floor 1', 'Floor 2', 'Floor 3'];
@@ -1159,12 +1160,12 @@ const BatchFolio: React.FC = () => {
 
   const handleClearAll = () => {
     const defaultFilters = {
-      dateRange: null,
-      reservationStatus: [],
-      buildings: [],
-      floors: [],
-      businessSources: [],
-      roomTypes: [],
+    dateRange: null,
+    reservationStatus: [],
+    buildings: [],
+    floors: [],
+    businessSources: [],
+    roomTypes: [],
       groups: [],
     };
     setPendingFilters(defaultFilters);
@@ -1580,7 +1581,29 @@ const BatchFolio: React.FC = () => {
     return Array.from(types);
   }, [uniqueData]);
 
+  const [showEmailAlert, setShowEmailAlert] = useState<{ visible: boolean, folioName: string }>({ visible: false, folioName: '' });
+
+  const emailMenu = {
+    items: [
+      { key: 'Folio', label: 'Folio' },
+      { key: 'Detailed Folio', label: 'Detailed Folio' },
+      { key: 'Registration Form', label: 'Registration Form' },
+    ],
+    onClick: (info: { key: string }) => handleEmailDropdownClick(info.key),
+  };
+
+  const handleEmailDropdownClick = (optionKey: string) => {
+    setShowEmailAlert({ visible: true, folioName: optionKey });
+  };
+
   return (
+    <>
+      {showEmailAlert.visible && (
+        <ExportSuccessAlert
+          folioNames={showEmailAlert.folioName}
+          onClose={() => setShowEmailAlert({ visible: false, folioName: '' })}
+        />
+      )}
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
       <div style={{ flex: 1, marginLeft: '60px', display: 'flex', flexDirection: 'column', height: '100vh', background: '#f5f6fa', overflow: 'hidden' }}>
@@ -1591,7 +1614,7 @@ const BatchFolio: React.FC = () => {
             <div className="batch-folio-toolbar">
               <div>
                 <Input.Search
-                  placeholder="Search for reservation ID, guests"
+                  placeholder="Search for reservation ID, point of contact"
                   allowClear
                   enterButton={<SearchOutlined />}
                   size="large"
@@ -1622,7 +1645,7 @@ const BatchFolio: React.FC = () => {
                       )}
                     </span>
                   }
-                  className={`batch-folio-toolbar-btn${isAnyPendingFilterApplied() ? ' active-filter' : ''}`}
+                    className={`batch-folio-toolbar-btn${isAnyPendingFilterApplied() ? ' active-filter' : ''}`}
                   style={isAnyPendingFilterApplied() ? { border: '1px solid #3E4BE0' } : {}}
                   onClick={() => setFilterDrawerOpen(true)}
                 />
@@ -1636,50 +1659,50 @@ const BatchFolio: React.FC = () => {
                 >
                   <Button icon={<ColumnsIcon style={{ width: 24, height: 24 }} />} className="batch-folio-toolbar-btn" />
                 </Dropdown>
-                {/* New Dropdown Button to the right of Customize Columns */}
-                {selectedRowKeys.length === 0 ? (
-                  <Button className="batch-folio-toolbar-btn print-dropdown-btn" disabled>
-                    Print <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
-                  </Button>
-                ) : (
-                  <Dropdown
-                    menu={{
-                      items: [
-                        { key: 'folio', label: 'Folio', onClick: () => handlePrintDropdownClick('Folio') },
-                        { key: 'detailed-folio', label: 'Detailed Folio', onClick: () => handlePrintDropdownClick('Detailed Folio') },
-                        { key: 'registration-form', label: 'Registration Form', onClick: () => handlePrintDropdownClick('Registration Form') },
-                      ],
-                    }}
-                    placement="bottomRight"
-                    arrow
-                  >
-                    <Button className="batch-folio-toolbar-btn print-dropdown-btn">
+                  {/* New Dropdown Button to the right of Customize Columns */}
+                  {selectedRowKeys.length === 0 ? (
+                    <Button className="batch-folio-toolbar-btn print-dropdown-btn" disabled>
                       Print <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
                     </Button>
-                  </Dropdown>
-                )}
-                {/* New Export Dropdown Button to the right of Print */}
-                {selectedRowKeys.length === 0 ? (
-                  <Button className="batch-folio-toolbar-btn print-dropdown-btn" disabled>
-                    Email <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
-                  </Button>
-                ) : (
-                  <Dropdown
-                    menu={{
-                      items: [
-                        { key: 'folio', label: 'Folio' },
-                        { key: 'detailed-folio', label: 'Detailed Folio' },
-                        { key: 'registration-form', label: 'Registration Form' },
-                      ],
-                    }}
-                    placement="bottomRight"
-                    arrow
-                  >
-                    <Button className="batch-folio-toolbar-btn print-dropdown-btn">
-                      Email <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
-                    </Button>
-                  </Dropdown>
-                )}
+                  ) : (
+                    <Dropdown
+                      menu={{
+                        items: [
+                          { key: 'folio', label: 'Folio', onClick: () => handlePrintDropdownClick('Folio') },
+                          { key: 'detailed-folio', label: 'Detailed Folio', onClick: () => handlePrintDropdownClick('Detailed Folio') },
+                          { key: 'registration-form', label: 'Registration Form', onClick: () => handlePrintDropdownClick('Registration Form') },
+                        ],
+                      }}
+                      placement="bottomRight"
+                      arrow
+                    >
+                      <Button className="batch-folio-toolbar-btn print-dropdown-btn">
+                        Print <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
+                      </Button>
+                    </Dropdown>
+                  )}
+                  {/* New Export Dropdown Button to the right of Print */}
+                  {selectedRowKeys.length === 0 ? (
+                    <Dropdown
+                      menu={emailMenu}
+                      placement="bottomRight"
+                      arrow
+                    >
+                      <Button className="batch-folio-toolbar-btn print-dropdown-btn" disabled>
+                        Email <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
+                      </Button>
+                    </Dropdown>
+                  ) : (
+                    <Dropdown
+                      menu={emailMenu}
+                      placement="bottomRight"
+                      arrow
+                    >
+                      <Button className="batch-folio-toolbar-btn print-dropdown-btn">
+                        Email <DownOutlined style={{ fontSize: 16, marginLeft: 8 }} />
+                      </Button>
+                    </Dropdown>
+                  )}
               </div>
             </div>
             <div className="table-wrapper">
@@ -1715,33 +1738,33 @@ const BatchFolio: React.FC = () => {
                 }}
               />
             </div>
-            <div className="batch-folio-pagination-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 24 }}>
-              <div style={{ flex: 1, textAlign: 'left', color: 'rgba(0,0,0,0.65)', fontSize: 14 }}>
-                Total {finalData.length} results
-              </div>
-              <div style={{ flex: 2, display: 'flex', justifyContent: 'center' }}>
-                <Pagination
-                  current={current}
-                  pageSize={pageSize}
-                  total={finalData.length}
-                  showSizeChanger={false}
-                  pageSizeOptions={pageSizeOptions.map(String)}
-                  onChange={handlePageChange}
-                  style={{ margin: 0 }}
-                />
-              </div>
-              <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+              <div className="batch-folio-pagination-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 24 }}>
+                <div style={{ flex: 1, textAlign: 'left', color: 'rgba(0,0,0,0.65)', fontSize: 14 }}>
+                  Total {finalData.length} results
+                </div>
+                <div style={{ flex: 2, display: 'flex', justifyContent: 'center' }}>
+              <Pagination
+                current={current}
+                pageSize={pageSize}
+                total={finalData.length}
+                showSizeChanger={false}
+                pageSizeOptions={pageSizeOptions.map(String)}
+                onChange={handlePageChange}
+                    style={{ margin: 0 }}
+              />
+                </div>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
                 <Select
-                  showSearch
+                    showSearch
                   value={pageSize}
                   onChange={size => {
                     setPageSize(size);
                     setCurrent(1);
                   }}
                   options={pageSizeOptions.map(size => ({ value: size, label: `${size} / page` }))}
-                  style={{ height: 30, color: 'rgba(0,0,0,0.65)', fontSize: 14 }}
-                  dropdownStyle={{ color: 'rgba(0,0,0,0.65)', minHeight: 30 }}
-                  className="per-page-selector-compact"
+                    style={{ height: 30, color: 'rgba(0,0,0,0.65)', fontSize: 14 }}
+                    dropdownStyle={{ color: 'rgba(0,0,0,0.65)', minHeight: 30 }}
+                    className="per-page-selector-compact"
                 />
               </div>
             </div>
@@ -1770,15 +1793,15 @@ const BatchFolio: React.FC = () => {
               footer={
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, padding: '16px 24px' }}>
                   <Button type="text" onClick={handleCancel} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }}>Cancel</Button>
-                  <Button type="primary" onClick={() => { setFilters(pendingFilters); setFilterDrawerOpen(false); }} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }} disabled={!isAnyPendingFilterApplied() || pendingResultsCount === 0}>
-                    Show {pendingResultsCount} Results
-                  </Button>
+                    <Button type="primary" onClick={() => { setFilters(pendingFilters); setFilterDrawerOpen(false); }} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }} disabled={!isAnyPendingFilterApplied() || pendingResultsCount === 0}>
+                      Show {pendingResultsCount} Results
+                    </Button>
                 </div>
               }
               footerStyle={{ padding: 0 }}
             >
               <Form layout="vertical">
-                <Form.Item label="Check-In and Check-Out Date">
+                  <Form.Item label="Check-In and Check-Out Date">
                   <DatePicker.RangePicker
                     value={pendingFilters.dateRange}
                     onChange={val => {
@@ -1789,100 +1812,100 @@ const BatchFolio: React.FC = () => {
                     style={{ width: '100%' }}
                   />
                 </Form.Item>
-                <Form.Item label="Status">
-                  <Select
-                    mode="multiple"
+                  <Form.Item label="Status">
+                    <Select
+                      mode="multiple"
                     value={pendingFilters.reservationStatus}
                     onChange={val => setPendingFilters(f => ({ ...f, reservationStatus: val }))}
                     options={RESERVATION_STATUSES.map(s => ({ value: s.value, label: s.label }))}
-                    placeholder="Select status"
-                    style={{ width: '100%', height: 40 }}
-                    maxTagCount={2}
-                    maxTagPlaceholder={omittedValues => (
-                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                        +{omittedValues.length}
-                      </span>
-                    )}
+                      placeholder="Select status"
+                      style={{ width: '100%', height: 40 }}
+                      maxTagCount={2}
+                      maxTagPlaceholder={omittedValues => (
+                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                          +{omittedValues.length}
+                        </span>
+                      )}
                   />
                 </Form.Item>
                 <Form.Item label="Buildings">
-                  <Select
-                    mode="multiple"
+                    <Select
+                      mode="multiple"
                     value={pendingFilters.buildings}
                     onChange={val => setPendingFilters(f => ({ ...f, buildings: val }))}
                     options={BUILDINGS.map(b => ({ value: b, label: b }))}
                     placeholder="Select buildings"
-                    style={{ width: '100%', height: 40 }}
-                    maxTagCount={2}
-                    maxTagPlaceholder={omittedValues => (
-                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                        +{omittedValues.length}
-                      </span>
-                    )}
+                      style={{ width: '100%', height: 40 }}
+                      maxTagCount={2}
+                      maxTagPlaceholder={omittedValues => (
+                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                          +{omittedValues.length}
+                        </span>
+                      )}
                   />
                 </Form.Item>
                 <Form.Item label="Floors">
-                  <Select
-                    mode="multiple"
+                    <Select
+                      mode="multiple"
                     value={pendingFilters.floors}
                     onChange={val => setPendingFilters(f => ({ ...f, floors: val }))}
                     options={FLOORS.map(f => ({ value: f, label: f }))}
                     placeholder="Select floors"
-                    style={{ width: '100%', height: 40 }}
-                    maxTagCount={2}
-                    maxTagPlaceholder={omittedValues => (
-                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                        +{omittedValues.length}
-                      </span>
-                    )}
+                      style={{ width: '100%', height: 40 }}
+                      maxTagCount={2}
+                      maxTagPlaceholder={omittedValues => (
+                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                          +{omittedValues.length}
+                        </span>
+                      )}
                   />
                 </Form.Item>
                 <Form.Item label="Business Sources">
-                  <Select
-                    mode="multiple"
+                    <Select
+                      mode="multiple"
                     value={pendingFilters.businessSources}
                     onChange={val => setPendingFilters(f => ({ ...f, businessSources: val }))}
-                    options={businessSources.map(s => ({ value: s, label: s }))}
+                      options={businessSources.map(s => ({ value: s, label: s }))}
                     placeholder="Select business sources"
-                    style={{ width: '100%', height: 40 }}
-                    maxTagCount={2}
-                    maxTagPlaceholder={omittedValues => (
-                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                        +{omittedValues.length}
-                      </span>
-                    )}
+                      style={{ width: '100%', height: 40 }}
+                      maxTagCount={2}
+                      maxTagPlaceholder={omittedValues => (
+                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                          +{omittedValues.length}
+                        </span>
+                      )}
                   />
                 </Form.Item>
-                <Form.Item label="Room/Space Type">
-                  <Select
-                    mode="multiple"
+                  <Form.Item label="Room/Space Type">
+                    <Select
+                      mode="multiple"
                     value={pendingFilters.roomTypes}
                     onChange={val => setPendingFilters(f => ({ ...f, roomTypes: val }))}
-                    options={allRoomAndSpaceTypes.map(type => ({ value: type, label: type }))}
-                    placeholder="Select room or space types"
-                    style={{ width: '100%', height: 40 }}
-                    maxTagCount={2}
-                    maxTagPlaceholder={omittedValues => (
-                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                        +{omittedValues.length}
-                      </span>
-                    )}
-                  />
-                </Form.Item>
-                <Form.Item label="Groups">
-                  <Select
-                    mode="multiple"
-                    value={pendingFilters.groups}
-                    onChange={val => setPendingFilters(f => ({ ...f, groups: val }))}
-                    options={allGroupNames.map(name => ({ value: name, label: name }))}
-                    placeholder="Select groups"
-                    style={{ width: '100%', height: 40 }}
-                    maxTagCount={2}
-                    maxTagPlaceholder={omittedValues => (
-                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                        +{omittedValues.length}
-                      </span>
-                    )}
+                      options={allRoomAndSpaceTypes.map(type => ({ value: type, label: type }))}
+                      placeholder="Select room or space types"
+                      style={{ width: '100%', height: 40 }}
+                      maxTagCount={2}
+                      maxTagPlaceholder={omittedValues => (
+                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                          +{omittedValues.length}
+                        </span>
+                      )}
+                    />
+                  </Form.Item>
+                  <Form.Item label="Groups">
+                    <Select
+                      mode="multiple"
+                      value={pendingFilters.groups}
+                      onChange={val => setPendingFilters(f => ({ ...f, groups: val }))}
+                      options={allGroupNames.map(name => ({ value: name, label: name }))}
+                      placeholder="Select groups"
+                      style={{ width: '100%', height: 40 }}
+                      maxTagCount={2}
+                      maxTagPlaceholder={omittedValues => (
+                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                          +{omittedValues.length}
+                        </span>
+                      )}
                   />
                 </Form.Item>
               </Form>
@@ -1891,6 +1914,7 @@ const BatchFolio: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
