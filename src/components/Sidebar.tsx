@@ -169,6 +169,12 @@ const Sidebar: React.FC = () => {
 
   const handleParentClick = (key: string) => {
     setOpenKeys((prev) => (prev.includes(key) ? [] : [key]));
+    // If the parent has no children, treat as a direct feature click and collapse
+    const parent = menuItems.find(item => item.label === key);
+    if (!parent?.children) {
+      setSelectedItem(key);
+      setCollapsed(true);
+    }
   };
 
   const handleChildClick = (key: string) => {

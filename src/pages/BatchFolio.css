@@ -406,9 +406,6 @@ html, body, * {
 
 .ant-table-selection-column,
 .ant-table-thead > tr > th.ant-table-selection-column {
-  width: 56px !important;
-  min-width: 56px !important;
-  max-width: 56px !important;
   box-sizing: border-box !important;
   padding: 0 !important;
 }
