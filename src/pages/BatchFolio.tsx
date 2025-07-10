@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import './BatchFolio.css';
 import Sidebar from '../components/Sidebar';
 import HeaderBar from '../components/HeaderBar';
-import { Input, Button, Table, Pagination, Select, Tooltip, Drawer, Form, DatePicker, Checkbox, Dropdown, Modal, message } from 'antd';
+import { Input, Button, Table, Pagination, Select, Tooltip, Drawer, Form, DatePicker, Checkbox, Dropdown, Modal, message, Spin } from 'antd';
 import { SearchOutlined, CloseOutlined, MenuOutlined, FlagOutlined, DownOutlined, UserOutlined } from '@ant-design/icons';
 import { ReactComponent as ColumnsIcon } from '../assets/Icons/ColumnsIcon.svg';
 import { ReactComponent as FunnelIcon } from '../assets/Icons/FunnelIcon.svg';
@@ -1252,12 +1252,17 @@ const BatchFolio: React.FC = () => {
     </div>
   );
 
-  // Remove the separate rectangle column logic and revert to a single Reservation ID column
-  const columnsWithNesting = visibleColumns.map(col => {
+  // Add fixed: 'left' to checkbox, Reservation ID, and POC columns
+  const columnsWithNesting = visibleColumns.map((col, idx) => {
     let width;
-    if (col.key === 'reservationId') width = 180;
-    else if (col.key === 'pocFullName') width = 180;
-    else if (col.key === 'checkInDate') width = 160;
+    let fixed: 'left' | 'right' | undefined;
+    if (col.key === 'reservationId') {
+      width = 180;
+      fixed = 'left';
+    } else if (col.key === 'pocFullName') {
+      width = 180;
+      fixed = 'left';
+    } else if (col.key === 'checkInDate') width = 160;
     else if (col.key === 'checkOutDate') width = 160;
     else if (col.key === 'room') width = 200;
     else if (col.key === 'businessSource') width = 180;
@@ -1266,7 +1271,7 @@ const BatchFolio: React.FC = () => {
     else if (col.key === 'reservationStatus') width = 140;
     else if (col.key === 'cancellationPolicy') width = 180;
     // Add title and sorter
-    return {
+    const base = {
       ...col,
       width,
       title: col.label,
@@ -1393,32 +1398,44 @@ const BatchFolio: React.FC = () => {
                 }
                 const showBan = (keyNum % 11 === 0 || keyNum % 11 === 5 || resIdNum % 11 === 0 || resIdNum % 11 === 5);
                 return (
-                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: '100%', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-                    {showBan && (
-                      <Tooltip
-                        title={
-                          <div>
-                            <strong>DNR Reason:</strong><br />
-                            <span>Placeholder reasons for do not rent guest</span>
-                          </div>
-                        }
-                        placement="top"
-                      >
-                      <span style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
-                        <BanIcon style={{ width: 16, height: 16, color: '#E53E3E' }} />
-                      </span>
-                      </Tooltip>
-                    )}
-                    <POCCellWithTooltip displayName={displayName} email={email} />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
+                      {showBan && (
+                        <Tooltip
+                          title={
+                            <div>
+                              <strong>DNR Reason:</strong><br />
+                              <span>Placeholder reasons for do not rent guest</span>
+                            </div>
+                          }
+                          placement="top"
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
+                            <BanIcon style={{ width: 16, height: 16, color: '#E53E3E' }} />
+                          </span>
+                        </Tooltip>
+                      )}
+                      <span style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', height: 20 }}>{displayName}</span>
+                    </div>
+                    <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', display: 'block' }}>{email}</span>
                   </div>
                 );
               }
             : col.key === 'businessSource'
               ? (value: string, record: any) => {
-                  let otaId = '';
-                  if (value === 'Expedia') otaId = 'CRS ID: 123456789';
-                  else if (value === 'Agoda') otaId = 'CRS ID: AG-987654';
-                  else if (value === 'Booking.com') otaId = 'CRS ID: 24680';
+                  // Mapping for business sources that should show CRS ID
+                  const crsIdMap: Record<string, string> = {
+                    'SynXis Web': 'CRS ID: SYN-123456',
+                    'Expedia': 'CRS ID: 123456789',
+                    'Booking.com': 'CRS ID: 24680',
+                    'Hotels.com': 'CRS ID: HOT-55555',
+                    'Travelocity (GHE)': 'CRS ID: GHE-88888',
+                    'Agoda': 'CRS ID: AG-987654',
+                    'Google Hotel Booking': 'CRS ID: GGL-33333',
+                    'Hotwire': 'CRS ID: HW-22222',
+                    'Ctrip': 'CRS ID: CT-77777',
+                  };
+                  const otaId = crsIdMap[value] || '';
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', minHeight: 0, overflow: 'hidden' }}>
                       <span style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
@@ -1459,10 +1476,16 @@ const BatchFolio: React.FC = () => {
                 : col.key === 'balance'
                   ? (value: number) => {
                       let color = 'rgba(0,0,0,0.88)';
+                      let prefix = null;
                       if (value > 0) color = '#3E4BE0';
-                      else if (value < 0) color = '#C53030';
+                      else if (value < 0) {
+                        color = '#C53030';
+                        prefix = <span style={{ marginRight: 4, fontWeight: 700 }}>-</span>;
+                      }
                       return (
-                        <span style={{ display: 'block', textAlign: 'right', width: '100%', color }}>{Math.abs(value).toFixed(2)}</span>
+                        <span style={{ display: 'block', textAlign: 'right', width: '100%', color }}>
+                          {prefix}{Math.abs(value).toFixed(2)}
+                        </span>
                       );
                     }
                 : col.key === 'checkInDate' || col.key === 'checkOutDate'
@@ -1477,6 +1500,7 @@ const BatchFolio: React.FC = () => {
           ? () => ({ style: { paddingLeft: 8, paddingRight: 8 } })
           : undefined,
     };
+    return fixed ? { ...base, fixed } : base;
   });
 
   // Robustly move Reservation Status after Room, if both exist
@@ -1524,42 +1548,32 @@ const BatchFolio: React.FC = () => {
     }).length;
   }, [pendingFilters, finalData, todayDayjs]);
 
-  const handlePrintDropdownClick = (optionKey: string) => {
-    let imgSrc = '';
-    if (optionKey === 'Folio') {
-      imgSrc = FolioImg;
-    } else if (optionKey === 'Detailed Folio') {
-      imgSrc = DetailedFolioImg;
-    } else if (optionKey === 'Registration Form') {
-      imgSrc = RegistrationFormImg;
-    }
-    if (!imgSrc) return;
+  const [showEmailAlert, setShowEmailAlert] = useState<{ visible: boolean, folioName: string }>({ visible: false, folioName: '' });
 
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Print Preview</title>
-            <style>
-              body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
-              img { max-width: 100vw; max-height: 100vh; }
-            </style>
-          </head>
-          <body>
-            <img src="${imgSrc}" alt="${optionKey}" />
-            <script>
-              window.onload = function() {
-                window.print();
-                window.onafterprint = function() { window.close(); };
-              };
-            <\/script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-    }
+  const emailMenu = {
+    items: [
+      { key: 'Folio', label: 'Folio' },
+      { key: 'Detailed Folio', label: 'Detailed Folio' },
+      { key: 'Registration Form', label: 'Registration Form' },
+    ],
+    onClick: (info: { key: string }) => handleEmailDropdownClick(info.key),
   };
+
+  const handleEmailDropdownClick = (optionKey: string) => {
+    setShowSpinner(true);
+    setTimeout(() => {
+      setShowSpinner(false);
+      setShowEmailAlert({ visible: true, folioName: optionKey });
+    }, 2000);
+  };
+
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  // Save pending filters before showing cancel modal
+  const [savedPendingFilters, setSavedPendingFilters] = useState<typeof pendingFilters | null>(null);
+
+  const hasUnsavedFilterChanges = JSON.stringify(filters) !== JSON.stringify(pendingFilters);
+
+  const [showSpinner, setShowSpinner] = useState(false);
 
   // Extract all unique group names from the data
   const allGroupNames = useMemo(() => {
@@ -1581,23 +1595,49 @@ const BatchFolio: React.FC = () => {
     return Array.from(types);
   }, [uniqueData]);
 
-  const [showEmailAlert, setShowEmailAlert] = useState<{ visible: boolean, folioName: string }>({ visible: false, folioName: '' });
-
-  const emailMenu = {
-    items: [
-      { key: 'Folio', label: 'Folio' },
-      { key: 'Detailed Folio', label: 'Detailed Folio' },
-      { key: 'Registration Form', label: 'Registration Form' },
-    ],
-    onClick: (info: { key: string }) => handleEmailDropdownClick(info.key),
-  };
-
-  const handleEmailDropdownClick = (optionKey: string) => {
-    setShowEmailAlert({ visible: true, folioName: optionKey });
+  const handlePrintDropdownClick = (optionKey: string) => {
+    setShowSpinner(true);
+    setTimeout(() => {
+      setShowSpinner(false);
+      let imgSrc = '';
+      if (optionKey === 'Folio') {
+        imgSrc = FolioImg;
+      } else if (optionKey === 'Detailed Folio') {
+        imgSrc = DetailedFolioImg;
+      } else if (optionKey === 'Registration Form') {
+        imgSrc = RegistrationFormImg;
+      }
+      if (!imgSrc) return;
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Print Preview</title>
+              <style>
+                body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+                img { max-width: 100vw; max-height: 100vh; }
+              </style>
+            </head>
+            <body>
+              <img src="${imgSrc}" alt="${optionKey}" />
+              <script>
+                window.onload = function() {
+                  window.print();
+                  window.onafterprint = function() { window.close(); };
+                };
+              <\/script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    }, 2000);
   };
 
   return (
     <>
+      {showSpinner && <Spin fullscreen />}
       {showEmailAlert.visible && (
         <ExportSuccessAlert
           folioNames={showEmailAlert.folioName}
@@ -1715,6 +1755,7 @@ const BatchFolio: React.FC = () => {
                   columnWidth: 56,
                   selectedRowKeys,
                   onChange: (selectedKeys: React.Key[]) => setSelectedRowKeys(selectedKeys),
+                  fixed: 'left',
                 }}
                 scroll={{ x: 1350, y: 400 }}
                 pagination={false}
@@ -1787,21 +1828,36 @@ const BatchFolio: React.FC = () => {
               }
               placement="right"
               width={400}
-              onClose={() => setFilterDrawerOpen(false)}
+              onClose={() => {
+                if (hasUnsavedFilterChanges) {
+                  setSavedPendingFilters(pendingFilters); // Save current state before showing modal
+                  setShowCancelModal(true);
+                } else {
+                  setFilterDrawerOpen(false);
+                }
+              }}
               open={filterDrawerOpen}
               bodyStyle={{ padding: 24 }}
               footer={
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, padding: '16px 24px' }}>
-                  <Button type="text" onClick={handleCancel} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }}>Cancel</Button>
-                    <Button type="primary" onClick={() => { setFilters(pendingFilters); setFilterDrawerOpen(false); }} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }} disabled={!isAnyPendingFilterApplied() || pendingResultsCount === 0}>
-                      Show {pendingResultsCount} Results
-                    </Button>
+                  <Button type="text" onClick={() => {
+                    if (hasUnsavedFilterChanges) {
+                      setSavedPendingFilters(pendingFilters); // Save current state before showing modal
+                      setShowCancelModal(true);
+                    } else {
+                      setFilterDrawerOpen(false);
+                    }
+                  }} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }}>Cancel</Button>
+                  <Button type="primary" onClick={() => {
+                    setFilters(pendingFilters);
+                    setFilterDrawerOpen(false);
+                  }} style={{ fontSize: 14, lineHeight: '22px', fontWeight: 500, height: 40 }}>Show {pendingResultsCount} Results</Button>
                 </div>
               }
               footerStyle={{ padding: 0 }}
             >
               <Form layout="vertical">
-                  <Form.Item label="Check-In and Check-Out Date">
+                <Form.Item label="Date Range">
                   <DatePicker.RangePicker
                     value={pendingFilters.dateRange}
                     onChange={val => {
@@ -1914,6 +1970,67 @@ const BatchFolio: React.FC = () => {
         </div>
       </div>
     </div>
+    {/* Cancel Confirmation Modal */}
+    <Modal
+      open={showCancelModal}
+      onCancel={() => setShowCancelModal(false)}
+      footer={null}
+      centered
+      closable={false}
+      width={400}
+      bodyStyle={{ padding: 0, background: '#fff', boxShadow: 'none' }}
+    >
+      <div className="modal-cancel-content" style={{ display: 'flex', alignItems: 'flex-start', gap: 16, background: '#fff' }}>
+        <InfoIcon style={{ width: 24, height: 24, flex: 'none', marginTop: 2 }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontWeight: 600, fontSize: 16, color: 'rgba(0,0,0,0.88)' }}>
+              Cancel Batch Folio Filtration?
+            </span>
+            <CloseOutlined style={{ fontSize: 18, color: 'rgba(0,0,0,0.45)', cursor: 'pointer' }} onClick={() => setShowCancelModal(false)} />
+          </div>
+          <div style={{ fontSize: 14, color: 'rgba(0,0,0,0.65)', marginBottom: 12 }}>
+            Proceeding will erase newly entered data, and you will need to start over.
+          </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+            <Button
+              type="default"
+              onClick={() => {
+                // Restore previous filter state and re-open drawer
+                if (savedPendingFilters) setPendingFilters(savedPendingFilters);
+                setShowCancelModal(false);
+                setFilterDrawerOpen(true);
+              }}
+              style={{ minWidth: 120, fontWeight: 500 }}
+            >
+              No, Keep Editing
+            </Button>
+            <Button
+              type="primary"
+              onClick={() => {
+                // Reset all filters and close everything
+                const defaultFilters = {
+                  dateRange: null,
+                  reservationStatus: [],
+                  buildings: [],
+                  floors: [],
+                  businessSources: [],
+                  roomTypes: [],
+                  groups: [],
+                };
+                setShowCancelModal(false);
+                setFilterDrawerOpen(false);
+                setFilters(defaultFilters);
+                setPendingFilters(defaultFilters);
+              }}
+              style={{ minWidth: 120, fontWeight: 500, background: '#3E4BE0', borderColor: '#3E4BE0', color: '#fff' }}
+            >
+              Yes, Cancel
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Modal>
     </>
   );
 };
