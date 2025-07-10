@@ -1064,10 +1064,20 @@ table .ant-table-cell.nesting-cell-child {
   margin-top: 0 !important;
 } 
 
-/* Fix excessive padding for cancel modal inside filters drawer */
-.ant-modal-body .modal-cancel-content {
+/* Cancel modal: remove all default padding, only apply to content */
+.cancel-modal .ant-modal-body {
+  padding: 0 !important;
+}
+.cancel-modal .modal-cancel-content {
   padding: 20px 24px !important;
 }
+/* Add 8px corner radius and remove padding for the cancel confirmation modal */
+.cancel-modal .ant-modal-content {
+  padding: 0 !important;
+  border-radius: 8px !important;
+} 
+
+/* Remove default AntD modal body padding for this modal */
 .ant-modal-body {
   padding: 0 !important;
 } 
@@ -1081,4 +1091,40 @@ table .ant-table-cell.nesting-cell-child {
 .ant-drawer .ant-select-selection-search-input {
   margin-left: 0 !important;
   padding-left: 0 !important;
+} 
+
+/* Reduce left and right padding for DatePicker.RangePicker in filter drawer */
+.ant-drawer .ant-picker-range {
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+}
+
+.ant-drawer .ant-picker-input > input {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+} 
+
+/* Force 8px corner radius and remove box-shadow for cancel confirmation modal */
+.cancel-modal .ant-modal-content {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+} 
+
+/* Consistent 4px left padding for chips in Select and DatePicker in filter drawer, only when chips/tags are present */
+.ant-drawer .ant-select-selector {
+  padding-left: 0 !important;
+}
+.ant-drawer .ant-select-selection-overflow .ant-select-selection-item {
+  margin-left: 4px !important;
+}
+.ant-drawer .ant-select-selection-overflow .ant-select-selection-item:first-child {
+  margin-left: 4px !important;
+}
+/* For DatePicker.RangePicker chips (if any), apply similar left margin */
+.ant-drawer .ant-picker-range .ant-picker-tag {
+  margin-left: 4px !important;
+}
+.ant-drawer .ant-picker-range .ant-picker-tag:first-child {
+  margin-left: 4px !important;
 } 
