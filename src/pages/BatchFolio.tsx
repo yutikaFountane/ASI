@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import './BatchFolio.css';
 import Sidebar from '../components/Sidebar';
 import HeaderBar from '../components/HeaderBar';
-import { Input, Button, Table, Pagination, Select, Tooltip, Drawer, Form, DatePicker, Checkbox, Dropdown, Modal, message, Spin } from 'antd';
+import { Input, Button, Table, Pagination, Select, Tooltip, Drawer, Form, DatePicker, Checkbox, Dropdown, Modal, message, Spin, Switch } from 'antd';
 import { SearchOutlined, CloseOutlined, MenuOutlined, FlagOutlined, DownOutlined, UserOutlined } from '@ant-design/icons';
 import { ReactComponent as ColumnsIcon } from '../assets/Icons/ColumnsIcon.svg';
 import { ReactComponent as FunnelIcon } from '../assets/Icons/FunnelIcon.svg';
@@ -969,10 +969,11 @@ function computeStatus(row: any, today: dayjs.Dayjs): string {
 const todayDayjs = dayjs(todayString);
 
 // Add this above BatchFolio
-const POCCellWithTooltip: React.FC<{ displayName: string; email: string }> = ({ displayName, email }) => {
+const POCCellWithTooltip: React.FC<{ displayName: string; email: string; showBan: boolean }> = ({ displayName, email, showBan }) => {
   const nameRef = React.useRef<HTMLSpanElement>(null);
   const emailRef = React.useRef<HTMLSpanElement>(null);
   const [showTooltip, setShowTooltip] = React.useState(false);
+
   React.useEffect(() => {
     if (nameRef.current && emailRef.current) {
       const nameTruncated = nameRef.current.scrollWidth > nameRef.current.clientWidth;
@@ -980,18 +981,27 @@ const POCCellWithTooltip: React.FC<{ displayName: string; email: string }> = ({ 
       setShowTooltip(nameTruncated || emailTruncated);
     }
   }, [displayName, email]);
+
   const content = (
     <>
-      <span ref={nameRef} style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', display: 'block' }}>{displayName}</span>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
+        {showBan && (
+          <span style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
+            <BanIcon style={{ width: 16, height: 16, color: '#E53E3E' }} />
+          </span>
+        )}
+        <span ref={nameRef} style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', height: 20 }}>{displayName}</span>
+      </div>
       <span ref={emailRef} style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', display: 'block' }}>{email}</span>
     </>
   );
+
   return showTooltip ? (
     <Tooltip title={<span>{displayName}<br />{email}</span>} placement="top" overlayInnerStyle={{ maxWidth: 300 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>{content}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minHeight: 0, overflow: 'hidden', position: 'relative' }}>{content}</div>
     </Tooltip>
   ) : (
-    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>{content}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minHeight: 0, overflow: 'hidden', position: 'relative' }}>{content}</div>
   );
 };
 
@@ -1039,6 +1049,7 @@ const BatchFolio: React.FC = () => {
     businessSources: [] as string[],
     roomTypes: [] as string[],
     groups: [] as string[],
+    cancellationPolicy: [] as string[],
   });
   const [pendingFilters, setPendingFilters] = useState(filters);
   const [customColumns, setCustomColumns] = useState(
@@ -1065,6 +1076,8 @@ const BatchFolio: React.FC = () => {
     setCurrent(1); // Reset to first page on new search
   };
 
+  const [showCheckedOut, setShowCheckedOut] = useState(true);
+
   const getSortedData = () => {
     let data = flatAllData;
 
@@ -1074,6 +1087,11 @@ const BatchFolio: React.FC = () => {
         (row.reservationId && String(row.reservationId).toLowerCase().includes(lower)) ||
         (row.pocFullName && String(row.pocFullName).toLowerCase().includes(lower))
       );
+    }
+
+    // Filter out Checked-Out reservations if switch is off
+    if (!showCheckedOut) {
+      data = data.filter(row => normalizeStatus(computeStatus(row, todayDayjs)) !== 'Checked-Out');
     }
 
     // Filtering logic (same as before)
@@ -1140,13 +1158,18 @@ const BatchFolio: React.FC = () => {
         return { status: computeStatus(row, todayDayjs), normalized: norm, priority: STATUS_PRIORITY[norm] };
       });
       console.log('Default sort debug (first 10 rows):', debugRows);
-      // Default sort by status priority, then reservationId (descending)
+      // Custom sort: Checked-Out (highest), In-House (second), Unconfirmed/Confirmed (third), then by check-in date ascending within each group
+      const statusOrder = ['Checked-Out', 'In-House', 'Confirmed', 'Unconfirmed'];
       data = data.slice().sort((a, b) => {
-        const aNorm = normalizeStatus(computeStatus(a, todayDayjs));
-        const bNorm = normalizeStatus(computeStatus(b, todayDayjs));
-        const statusDiff = (STATUS_PRIORITY[aNorm] || 99) - (STATUS_PRIORITY[bNorm] || 99);
-        if (statusDiff !== 0) return statusDiff;
-        return extractReservationNumber(b.reservationId) - extractReservationNumber(a.reservationId);
+        const aStatus = normalizeStatus(computeStatus(a, todayDayjs));
+        const bStatus = normalizeStatus(computeStatus(b, todayDayjs));
+        const aStatusIdx = statusOrder.indexOf(aStatus);
+        const bStatusIdx = statusOrder.indexOf(bStatus);
+        if (aStatusIdx !== bStatusIdx) return aStatusIdx - bStatusIdx;
+        // Secondary: sort by check-in date ascending (chronological)
+        const aDate = new Date(a.checkInDate || 0).getTime();
+        const bDate = new Date(b.checkInDate || 0).getTime();
+        return aDate - bDate;
       });
     }
     // Debug: log the current sorter and first few sorted results
@@ -1160,17 +1183,17 @@ const BatchFolio: React.FC = () => {
 
   const handleClearAll = () => {
     const defaultFilters = {
-    dateRange: null,
-    reservationStatus: [],
-    buildings: [],
-    floors: [],
-    businessSources: [],
-    roomTypes: [],
+      dateRange: null,
+      reservationStatus: [],
+      buildings: [],
+      floors: [],
+      businessSources: [],
+      roomTypes: [],
       groups: [],
+      cancellationPolicy: [],
     };
     setPendingFilters(defaultFilters);
     setFilters(defaultFilters);
-    // setFilterDrawerOpen(false); // Do not close the drawer on clear all
   };
   const handleCancel = () => setFilterDrawerOpen(false);
 
@@ -1397,29 +1420,7 @@ const BatchFolio: React.FC = () => {
                   if (match) resIdNum = parseInt(match[0], 10);
                 }
                 const showBan = (keyNum % 11 === 0 || keyNum % 11 === 5 || resIdNum % 11 === 0 || resIdNum % 11 === 5);
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
-                      {showBan && (
-                        <Tooltip
-                          title={
-                            <div>
-                              <strong>DNR Reason:</strong><br />
-                              <span>Placeholder reasons for do not rent guest</span>
-                            </div>
-                          }
-                          placement="top"
-                        >
-                          <span style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
-                            <BanIcon style={{ width: 16, height: 16, color: '#E53E3E' }} />
-                          </span>
-                        </Tooltip>
-                      )}
-                      <span style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', height: 20 }}>{displayName}</span>
-                    </div>
-                    <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.65)', lineHeight: '20px', margin: '2px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', display: 'block' }}>{email}</span>
-                  </div>
-                );
+                return <POCCellWithTooltip displayName={displayName} email={email} showBan={showBan} />;
               }
             : col.key === 'businessSource'
               ? (value: string, record: any) => {
@@ -1435,7 +1436,10 @@ const BatchFolio: React.FC = () => {
                     'Hotwire': 'CRS ID: HW-22222',
                     'Ctrip': 'CRS ID: CT-77777',
                   };
-                  const otaId = crsIdMap[value] || '';
+                  let otaId = '';
+                  if (value && value.trim().toLowerCase() !== 'walk-in') {
+                    otaId = crsIdMap[value] || `CRS ID: ${value}`;
+                  }
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', minHeight: 0, overflow: 'hidden' }}>
                       <span style={{ fontSize: 14, color: '#222', fontWeight: 400, lineHeight: '20px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
@@ -1665,6 +1669,16 @@ const BatchFolio: React.FC = () => {
                 />
               </div>
               <div className="batch-folio-toolbar-actions">
+                <div style={{ display: 'flex', alignItems: 'center', marginRight: 16 }}>
+                  <span style={{ fontSize: 16, marginRight: 8 }}>Checked-Out Reservations</span>
+                  <Switch
+                    checked={showCheckedOut}
+                    onChange={setShowCheckedOut}
+                    checkedChildren=""
+                    unCheckedChildren=""
+                    style={showCheckedOut ? { backgroundColor: '#3E4BE0' } : {}}
+                  />
+                </div>
                 <Button
                   icon={
                     <span style={{ position: 'relative', display: 'inline-block' }}>
@@ -1857,7 +1871,7 @@ const BatchFolio: React.FC = () => {
               footerStyle={{ padding: 0 }}
             >
               <Form layout="vertical">
-                <Form.Item label="Date Range">
+                <Form.Item label="Duration">
                   <DatePicker.RangePicker
                     value={pendingFilters.dateRange}
                     onChange={val => {
@@ -1868,100 +1882,116 @@ const BatchFolio: React.FC = () => {
                     style={{ width: '100%' }}
                   />
                 </Form.Item>
-                  <Form.Item label="Status">
-                    <Select
-                      mode="multiple"
+                <Form.Item label="Status">
+                  <Select
+                    mode="multiple"
                     value={pendingFilters.reservationStatus}
                     onChange={val => setPendingFilters(f => ({ ...f, reservationStatus: val }))}
                     options={RESERVATION_STATUSES.map(s => ({ value: s.value, label: s.label }))}
-                      placeholder="Select status"
-                      style={{ width: '100%', height: 40 }}
-                      maxTagCount={2}
-                      maxTagPlaceholder={omittedValues => (
-                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                          +{omittedValues.length}
-                        </span>
-                      )}
+                    placeholder="Select status"
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
+                  />
+                </Form.Item>
+                <Form.Item label="Room/Space Type">
+                  <Select
+                    mode="multiple"
+                    value={pendingFilters.roomTypes}
+                    onChange={val => setPendingFilters(f => ({ ...f, roomTypes: val }))}
+                    options={allRoomAndSpaceTypes.map(type => ({ value: type, label: type }))}
+                    placeholder="Select room or space types"
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
+                  />
+                </Form.Item>
+                <Form.Item label="Groups">
+                  <Select
+                    mode="multiple"
+                    value={pendingFilters.groups}
+                    onChange={val => setPendingFilters(f => ({ ...f, groups: val }))}
+                    options={allGroupNames.map(name => ({ value: name, label: name }))}
+                    placeholder="Select groups"
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
+                  />
+                </Form.Item>
+                <Form.Item label="Business Sources">
+                  <Select
+                    mode="multiple"
+                    value={pendingFilters.businessSources}
+                    onChange={val => setPendingFilters(f => ({ ...f, businessSources: val }))}
+                    options={businessSources.map(s => ({ value: s, label: s }))}
+                    placeholder="Select business sources"
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
+                  />
+                </Form.Item>
+                <Form.Item label="Cancellation Policy">
+                  <Select
+                    mode="multiple"
+                    value={pendingFilters.cancellationPolicy}
+                    onChange={val => setPendingFilters(f => ({ ...f, cancellationPolicy: val }))}
+                    options={cancellationPolicies.map(s => ({ value: s, label: s }))}
+                    placeholder="Select cancellation policy"
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
                   />
                 </Form.Item>
                 <Form.Item label="Buildings">
-                    <Select
-                      mode="multiple"
+                  <Select
+                    mode="multiple"
                     value={pendingFilters.buildings}
                     onChange={val => setPendingFilters(f => ({ ...f, buildings: val }))}
                     options={BUILDINGS.map(b => ({ value: b, label: b }))}
                     placeholder="Select buildings"
-                      style={{ width: '100%', height: 40 }}
-                      maxTagCount={2}
-                      maxTagPlaceholder={omittedValues => (
-                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                          +{omittedValues.length}
-                        </span>
-                      )}
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
                   />
                 </Form.Item>
                 <Form.Item label="Floors">
-                    <Select
-                      mode="multiple"
+                  <Select
+                    mode="multiple"
                     value={pendingFilters.floors}
                     onChange={val => setPendingFilters(f => ({ ...f, floors: val }))}
                     options={FLOORS.map(f => ({ value: f, label: f }))}
                     placeholder="Select floors"
-                      style={{ width: '100%', height: 40 }}
-                      maxTagCount={2}
-                      maxTagPlaceholder={omittedValues => (
-                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                          +{omittedValues.length}
-                        </span>
-                      )}
-                  />
-                </Form.Item>
-                <Form.Item label="Business Sources">
-                    <Select
-                      mode="multiple"
-                    value={pendingFilters.businessSources}
-                    onChange={val => setPendingFilters(f => ({ ...f, businessSources: val }))}
-                      options={businessSources.map(s => ({ value: s, label: s }))}
-                    placeholder="Select business sources"
-                      style={{ width: '100%', height: 40 }}
-                      maxTagCount={2}
-                      maxTagPlaceholder={omittedValues => (
-                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                          +{omittedValues.length}
-                        </span>
-                      )}
-                  />
-                </Form.Item>
-                  <Form.Item label="Room/Space Type">
-                    <Select
-                      mode="multiple"
-                    value={pendingFilters.roomTypes}
-                    onChange={val => setPendingFilters(f => ({ ...f, roomTypes: val }))}
-                      options={allRoomAndSpaceTypes.map(type => ({ value: type, label: type }))}
-                      placeholder="Select room or space types"
-                      style={{ width: '100%', height: 40 }}
-                      maxTagCount={2}
-                      maxTagPlaceholder={omittedValues => (
-                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                          +{omittedValues.length}
-                        </span>
-                      )}
-                    />
-                  </Form.Item>
-                  <Form.Item label="Groups">
-                    <Select
-                      mode="multiple"
-                      value={pendingFilters.groups}
-                      onChange={val => setPendingFilters(f => ({ ...f, groups: val }))}
-                      options={allGroupNames.map(name => ({ value: name, label: name }))}
-                      placeholder="Select groups"
-                      style={{ width: '100%', height: 40 }}
-                      maxTagCount={2}
-                      maxTagPlaceholder={omittedValues => (
-                        <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
-                          +{omittedValues.length}
-                        </span>
-                      )}
+                    style={{ width: '100%', height: 40 }}
+                    maxTagCount={2}
+                    maxTagPlaceholder={omittedValues => (
+                      <span style={{ display: 'inline-block', background: '#f0f0f0', borderRadius: 16, padding: '0 8px', fontSize: 14, color: '#222', height: 32, lineHeight: '32px', marginRight: 4 }}>
+                        +{omittedValues.length}
+                      </span>
+                    )}
                   />
                 </Form.Item>
               </Form>
@@ -2017,6 +2047,7 @@ const BatchFolio: React.FC = () => {
                   businessSources: [],
                   roomTypes: [],
                   groups: [],
+                  cancellationPolicy: [],
                 };
                 setShowCancelModal(false);
                 setFilterDrawerOpen(false);

@@ -1065,9 +1065,20 @@ table .ant-table-cell.nesting-cell-child {
 } 
 
 /* Fix excessive padding for cancel modal inside filters drawer */
-/* .ant-modal-body .modal-cancel-content {
+.ant-modal-body .modal-cancel-content {
   padding: 20px 24px !important;
-} */
+}
 .ant-modal-body {
   padding: 0 !important;
+} 
+
+/* Remove extra left space from AntD Select in filter drawer */
+.ant-drawer .ant-select-selector {
+  padding-left: 0 !important;
+}
+
+/* Optionally, ensure the input inside is also flush left */
+.ant-drawer .ant-select-selection-search-input {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
 } 
