@@ -1076,7 +1076,8 @@ const BatchFolio: React.FC = () => {
     setCurrent(1); // Reset to first page on new search
   };
 
-  const [showCheckedOut, setShowCheckedOut] = useState(true);
+  // Set default to false so switch is off by default
+  const [showCheckedOut, setShowCheckedOut] = useState(false);
 
   const getSortedData = () => {
     let data = flatAllData;
@@ -2002,6 +2003,7 @@ const BatchFolio: React.FC = () => {
     </div>
     {/* Cancel Confirmation Modal */}
     <Modal
+      className="cancel-modal"
       open={showCancelModal}
       onCancel={() => setShowCancelModal(false)}
       footer={null}
