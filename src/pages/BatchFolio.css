@@ -1063,3 +1063,11 @@ table .ant-table-cell.nesting-cell-child {
 .ant-drawer .ant-form-vertical .ant-form-item:first-child {
   margin-top: 0 !important;
 } 
+
+/* Fix excessive padding for cancel modal inside filters drawer */
+/* .ant-modal-body .modal-cancel-content {
+  padding: 20px 24px !important;
+} */
+.ant-modal-body {
+  padding: 0 !important;
+} 
